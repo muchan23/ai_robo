@@ -34,6 +34,13 @@ OpenAI Whisper APIを使用した自律型ロボット制御システムの開�
 - **パフォーマンス監視**: リアルタイム統計表示
 - **最適化されたAI応答**: 短縮されたトークン数（80トークン）
 
+### ⚡ 最適化機能（最適化版のみ）
+- **バックグラウンド初期化**: 起動時間を大幅短縮（1-2秒）
+- **遅延読み込み**: 必要な時までモジュールを初期化しない
+- **超高速応答**: 最初のターンから2-3秒で応答
+- **超短縮AI応答**: 60トークンによる簡潔な応答
+- **メモリ最適化**: 低メモリ使用量で効率的な動作
+
 ## セットアップ
 
 ### 1. 依存関係のインストール
@@ -101,7 +108,7 @@ python voice_chat.py --test
 - 設定の妥当性をチェック
 - システムの動作確認
 
-### 🚀 高速版の使用方法（推奨）
+### 🚀 高速版の使用方法
 
 応答時間を大幅に短縮した高速版システムも利用できます：
 
@@ -128,6 +135,33 @@ python fast_voice_chat.py --test
 - 高速システムの設定確認
 - 最適化設定の表示
 
+### ⚡ 最適化版の使用方法（最推奨）
+
+最初のターンから超高速応答を実現する最適化版システム：
+
+#### 1. 最適化自動音声検出モード
+```bash
+python optimized_voice_chat.py
+```
+- **バックグラウンド初期化**による起動時間短縮
+- **遅延読み込み**によるメモリ最適化
+- **超短縮AI応答**（60トークン）
+- **最初のターンから2-3秒**で応答
+
+#### 2. 最適化音声ファイル処理モード
+```bash
+python optimized_voice_chat.py --file path/to/audio.wav
+```
+- 音声ファイルの最適化処理
+- バックグラウンド初期化
+
+#### 3. 最適化テストモード
+```bash
+python optimized_voice_chat.py --test
+```
+- 最適化システムの設定確認
+- 初期化時間とパフォーマンス設定の表示
+
 ### 高度な使用方法
 
 #### 音声の種類を変更
@@ -139,6 +173,10 @@ python voice_chat.py --voice onyx  # 男性の声
 # 高速版
 python fast_voice_chat.py --voice nova  # 女性の声
 python fast_voice_chat.py --voice onyx  # 男性の声
+
+# 最適化版
+python optimized_voice_chat.py --voice nova  # 女性の声
+python optimized_voice_chat.py --voice onyx  # 男性の声
 ```
 
 #### ChatGPTモデルを変更
@@ -148,6 +186,9 @@ python voice_chat.py --model gpt-4o  # GPT-4oを使用（より高精度）
 
 # 高速版
 python fast_voice_chat.py --model gpt-4o  # GPT-4oを使用（より高精度）
+
+# 最適化版
+python optimized_voice_chat.py --model gpt-4o  # GPT-4oを使用（より高精度）
 ```
 
 #### パフォーマンス比較
@@ -157,6 +198,9 @@ python voice_chat.py
 
 # 高速版（最適化された応答時間）
 python fast_voice_chat.py
+
+# 最適化版（超高速応答時間）
+python optimized_voice_chat.py
 ```
 
 ### プログラムからの使用
@@ -192,6 +236,27 @@ conversation.speak_response_fast(response)
 
 # パフォーマンス統計を取得
 stats = conversation.get_performance_stats()
+print(f"平均応答時間: {stats['avg_response_time']:.2f}秒")
+```
+
+#### 最適化版
+```python
+from src.optimized_voice_conversation import OptimizedVoiceConversation
+
+# 最適化音声会話システムを作成（バックグラウンド初期化開始）
+conversation = OptimizedVoiceConversation()
+
+# 自動音声検出モードで開始
+conversation.start_conversation(auto_mode=True)
+
+# 手動で音声ファイルを最適化処理
+response = conversation.process_audio_file_optimized("audio.wav")
+conversation.speak_response_optimized(response)
+
+# パフォーマンス統計と初期化状態を取得
+stats = conversation.get_performance_stats()
+init_status = conversation.get_initialization_status()
+print(f"初期化時間: {init_status['initialization_time']:.2f}秒")
 print(f"平均応答時間: {stats['avg_response_time']:.2f}秒")
 ```
 
@@ -241,6 +306,7 @@ ai_robo/
 │   ├── text_to_speech.py        # 音声合成モジュール
 │   ├── voice_conversation.py    # 会話システム統合モジュール
 │   ├── fast_voice_conversation.py # 高速会話システムモジュール
+│   ├── optimized_voice_conversation.py # 最適化会話システムモジュール
 │   └── config.py                # 設定管理モジュール
 ├── config/                       # 設定ファイル
 │   └── env.example              # 環境変数設定例
@@ -249,6 +315,7 @@ ai_robo/
 ├── requirements.txt              # 依存関係
 ├── voice_chat.py                # メインスクリプト（通常版）
 ├── fast_voice_chat.py           # 高速版メインスクリプト
+├── optimized_voice_chat.py      # 最適化版メインスクリプト
 ├── example_usage.py             # 使用例
 └── README.md                    # このファイル
 ```
@@ -327,6 +394,13 @@ speaker-test -t wav -c 2
 プルリクエストやイシューの報告を歓迎します。詳細は[開発方針](docs/development_policy.md)を参照してください。
 
 ## 更新履歴
+
+### v0.3.0 (2024-10-15)
+- **最適化版システムの追加**
+  - バックグラウンド初期化による起動時間短縮（1-2秒）
+  - 遅延読み込みによるメモリ最適化
+  - 最初のターンから2-3秒で応答
+  - 超短縮AI応答（60トークン）
 
 ### v0.2.0 (2024-10-15)
 - **高速版システムの追加**
