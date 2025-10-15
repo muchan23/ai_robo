@@ -68,7 +68,17 @@ class SpeechToText:
                     response_format=response_format
                 )
             
-            result = transcript.text
+            # response_formatによって結果の取得方法が異なる
+            if response_format == "text":
+                result = transcript  # 直接文字列が返される
+            else:
+                result = transcript.text  # オブジェクトのtext属性
+            
+            # 結果が文字列でない場合の処理
+            if not isinstance(result, str):
+                self.logger.warning(f"予期しない結果の型: {type(result)}")
+                result = str(result)
+            
             self.logger.info(f"文字起こし完了: {result[:50]}...")
             return result
             
@@ -83,7 +93,8 @@ class SpeechToText:
                             filename: str = "audio.wav",
                             model: str = "whisper-1",
                             language: Optional[str] = None,
-                            prompt: Optional[str] = None) -> str:
+                            prompt: Optional[str] = None,
+                            response_format: str = "text") -> str:
         """
         音声データ（バイト）を文字起こしする
         
@@ -112,10 +123,21 @@ class SpeechToText:
                 model=model,
                 file=audio_file,
                 language=language,
-                prompt=prompt
+                prompt=prompt,
+                response_format=response_format
             )
             
-            result = transcript.text
+            # response_formatによって結果の取得方法が異なる
+            if response_format == "text":
+                result = transcript  # 直接文字列が返される
+            else:
+                result = transcript.text  # オブジェクトのtext属性
+            
+            # 結果が文字列でない場合の処理
+            if not isinstance(result, str):
+                self.logger.warning(f"予期しない結果の型: {type(result)}")
+                result = str(result)
+            
             self.logger.info(f"文字起こし完了: {result[:50]}...")
             return result
             
