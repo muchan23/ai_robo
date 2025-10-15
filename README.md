@@ -1,91 +1,136 @@
-# AI Robot - 自律型音声認識ロボット制御プロジェクト
+# AI Robot プロジェクト
 
-## プロジェクト概要
-音声認識技術と周囲環境認識技術を組み合わせて、話しかけた内容に基づいてロボットが動作し、さらに周囲の状況を自動的に認識して適切なタスクを実行する自律型システムを構築する。
+OpenAI Whisper APIを使用した自律型ロボット制御システムの開発プロジェクトです。
 
----
+## 概要
 
-# Raspberry Pi - マイクとスピーカーの使い方
+このプロジェクトは、ラズパイで動作する音声認識システムを構築します。OpenAIのWhisper APIを使用して音声をテキストに変換し、将来的にはロボット制御との連携を予定しています。
 
-Raspberry Pi に USBマイクと USBスピーカーを接続して、録音・再生を行う方法をまとめます。
+## 機能
 
-## 🎤 マイクの利用方法
+- **音声文字起こし**: OpenAI Whisper APIを使用した高精度な音声認識
+- **設定管理**: 環境変数による柔軟な設定
+- **エラーハンドリング**: 堅牢なエラー処理とログ機能
+- **ラズパイ対応**: Raspberry Piでの動作を考慮した設計
 
-### 1. 接続確認
-USBマイクが認識されているか確認します：
+## セットアップ
+
+### 1. 依存関係のインストール
+
 ```bash
-arecord -l
+pip install -r requirements.txt
 ```
 
-出力例：
-```
-**** List of CAPTURE Hardware Devices ****
-card 3: Microphone [USB Microphone], device 0: USB Audio [USB Audio]
-  Subdevices: 1/1
-  Subdevice #0: subdevice #0
-```
-👉 card番号 と device番号 を確認します（例: card 3, device 0）。
+### 2. 環境変数の設定
 
-### 2. 録音
-5秒間録音する例：
+`config/env.example`を参考に、`.env`ファイルを作成してください：
+
 ```bash
-arecord -D plughw:3,0 -f cd -t wav -d 5 test.wav
+cp config/env.example .env
 ```
-- `-D plughw:3,0` → card番号3, device番号0を指定
-- `-f cd` → 44.1kHz, 16bit, ステレオ録音
-- `-d 5` → 5秒間録音
-- `test.wav` → 保存ファイル名
 
-## 🔊 スピーカーの利用方法
+`.env`ファイルを編集して、OpenAI APIキーを設定してください：
 
-### 1. 接続確認
-USBスピーカーが認識されているか確認します：
+```
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+### 3. OpenAI APIキーの取得
+
+1. [OpenAI Platform](https://platform.openai.com/)にアクセス
+2. アカウントを作成またはログイン
+3. API Keysセクションで新しいAPIキーを作成
+4. 作成したAPIキーを`.env`ファイルに設定
+
+## 使用方法
+
+### 基本的な使用方法
+
+```python
+from src.speech_to_text import SpeechToText
+
+# SpeechToTextインスタンスを作成
+stt = SpeechToText()
+
+# 音声ファイルを文字起こし
+result = stt.transcribe_audio_file("path/to/audio.wav")
+print(result)
+```
+
+### コマンドラインからの使用
+
 ```bash
-aplay -l
+python src/speech_to_text.py path/to/audio.wav --language ja
 ```
 
-出力例：
-```
-card 4: UACDemoV10 [UACDemoV1.0], device 0: USB Audio [USB Audio]
-  Subdevices: 1/1
-  Subdevice #0: subdevice #0
-```
-👉 card番号 と device番号 を確認します（例: card 4, device 0）。
+### 対話的な使用例
 
-### 2. 再生
-録音したファイルを再生する例：
 ```bash
-aplay -D plughw:4,0 test.wav
-```
-- `-D plughw:4,0` → card番号4, device番号0を指定
-
-## ⚙️ デフォルトデバイスの設定（任意）
-毎回番号を指定するのが面倒な場合は `/etc/asound.conf` を編集します：
-```bash
-sudo nano /etc/asound.conf
+python example_usage.py
 ```
 
-例：スピーカーを card 4 に固定する場合
-```conf
-pcm.!default {
-    type hw
-    card 4
-}
+## 対応音声形式
 
-ctl.!default {
-    type hw
-    card 4
-}
+- WAV
+- MP3
+- M4A
+- FLAC
+- その他Whisper APIがサポートする形式
+
+## 設定オプション
+
+### 環境変数
+
+| 変数名 | デフォルト値 | 説明 |
+|--------|-------------|------|
+| `OPENAI_API_KEY` | - | OpenAI APIキー（必須） |
+| `WHISPER_MODEL` | `whisper-1` | 使用するWhisperモデル |
+| `DEFAULT_LANGUAGE` | `ja` | デフォルト言語 |
+| `LOG_LEVEL` | `INFO` | ログレベル |
+| `SAMPLE_RATE` | `16000` | サンプルレート |
+| `MAX_AUDIO_DURATION` | `30` | 最大録音時間（秒） |
+
+## プロジェクト構造
+
+```
+ai_robo/
+├── src/                    # ソースコード
+│   ├── __init__.py
+│   ├── speech_to_text.py   # 音声文字起こしモジュール
+│   └── config.py          # 設定管理モジュール
+├── config/                # 設定ファイル
+│   └── env.example        # 環境変数設定例
+├── docs/                  # ドキュメント
+├── requirements.txt       # 依存関係
+├── example_usage.py       # 使用例
+└── README.md             # このファイル
 ```
 
-保存して再起動すると、次のようにシンプルに使えます：
-```bash
-arecord test.wav
-aplay test.wav
-```
+## 開発方針
 
-## ✅ 動作確認フロー
-1. `arecord -l` でマイクを確認
-2. `aplay -l` でスピーカーを確認
-3. `arecord` で録音
-4. `aplay` で再生
+詳細な開発方針については、[docs/development_policy.md](docs/development_policy.md)を参照してください。
+
+## トラブルシューティング
+
+### よくある問題
+
+1. **APIキーエラー**
+   - `.env`ファイルに正しいAPIキーが設定されているか確認
+   - APIキーに十分なクレジットがあるか確認
+
+2. **音声ファイルエラー**
+   - ファイルパスが正しいか確認
+   - 音声ファイルが破損していないか確認
+   - サポートされている音声形式か確認
+
+3. **ネットワークエラー**
+   - インターネット接続を確認
+   - ファイアウォール設定を確認
+
+## ライセンス
+
+このプロジェクトはMITライセンスの下で公開されています。
+
+## 貢献
+
+プルリクエストやイシューの報告を歓迎します。詳細は[開発方針](docs/development_policy.md)を参照してください。
