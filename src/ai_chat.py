@@ -54,7 +54,7 @@ class AIChat:
 ユーザーとの楽しい会話を楽しみにしています！"""
     
     def chat(self, user_message: str, 
-             max_tokens: int = 150,
+             max_tokens: int = 100,
              temperature: float = 0.7,
              reset_conversation: bool = False) -> str:
         """

@@ -34,7 +34,8 @@ class SpeechToText:
     def transcribe_audio_file(self, audio_file_path: Union[str, Path], 
                             model: str = "whisper-1", 
                             language: Optional[str] = None,
-                            prompt: Optional[str] = None) -> str:
+                            prompt: Optional[str] = None,
+                            response_format: str = "text") -> str:
         """
         音声ファイルを文字起こしする
         
@@ -63,7 +64,8 @@ class SpeechToText:
                     model=model,
                     file=audio_file,
                     language=language,
-                    prompt=prompt
+                    prompt=prompt,
+                    response_format=response_format
                 )
             
             result = transcript.text
