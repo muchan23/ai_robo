@@ -28,6 +28,13 @@ OpenAI Whisper APIを使用した自律型ロボット制御システムの開�
 - **エラーハンドリング**: 堅牢なエラー処理とログ機能
 - **ラズパイ最適化**: Raspberry Piでの動作を考慮した設計
 
+### 🎭 顔表情機能
+- **8種類の感情表現**: 中性、喜び、悲しみ、怒り、驚き、思考、聞いている、話している
+- **リアルタイム表情変化**: 音声会話に連動した表情の自動更新
+- **感情分析**: AI応答内容から自動で感情を判定
+- **アニメーション**: スムーズな表情変化（0.5秒のイージング）
+- **フルスクリーン対応**: モニター全体を顔として使用可能
+
 
 ## セットアップ
 
@@ -96,22 +103,84 @@ python voice_chat.py --test
 - 設定の妥当性をチェック
 - システムの動作確認
 
+### 🎭 顔表情付き音声会話システム
+
+音声会話に表情表示を統合したシステムも利用できます：
+
+#### 1. 顔表情付き自動音声検出モード
+```bash
+python face_voice_chat.py
+```
+- **音声認識とAI対話**
+- **リアルタイム表情変化**
+- **感情分析による自動表情**
+- **アニメーション付き表情切り替え**
+
+#### 2. フルスクリーンモード（推奨）
+```bash
+python face_voice_chat.py --fullscreen
+```
+- モニター全体を顔として使用
+- より大きな表情表示
+- 没入感のある対話体験
+
+#### 3. 顔表情付き音声ファイル処理モード
+```bash
+python face_voice_chat.py --file path/to/audio.wav
+```
+- 音声ファイルの処理と表情表示
+- 感情分析による表情変化
+
+#### 4. 顔表情システムテストモード
+```bash
+python face_voice_chat.py --test
+```
+- 顔表情機能の設定確認
+- 表情システムの動作テスト
+
+#### 5. 表情のみのテスト
+```bash
+python src/face_display.py
+```
+- 表情システムのみのテスト
+- キーボード操作で表情を手動切り替え
+- キー操作: 0=中性, 1=喜び, 2=悲しみ, 3=怒り, 4=驚き, ESC=終了
+
 
 ### 高度な使用方法
 
 #### 音声の種類を変更
 ```bash
+# 通常版
 python voice_chat.py --voice nova  # 女性の声
 python voice_chat.py --voice onyx  # 男性の声
+
+# 顔表情付き版
+python face_voice_chat.py --voice nova  # 女性の声
+python face_voice_chat.py --voice onyx  # 男性の声
 ```
 
 #### ChatGPTモデルを変更
 ```bash
+# 通常版
 python voice_chat.py --model gpt-4o  # GPT-4oを使用（より高精度）
+
+# 顔表情付き版
+python face_voice_chat.py --model gpt-4o  # GPT-4oを使用（より高精度）
+```
+
+#### 画面サイズの調整
+```bash
+# カスタム画面サイズ
+python face_voice_chat.py --width 1024 --height 768
+
+# フルスクリーンモード
+python face_voice_chat.py --fullscreen
 ```
 
 ### プログラムからの使用
 
+#### 通常版
 ```python
 from src.voice_conversation import VoiceConversation
 
@@ -124,6 +193,25 @@ conversation.start_conversation(auto_mode=True)
 # 手動で音声ファイルを処理
 response = conversation.process_audio_file("audio.wav")
 conversation.speak_response(response)
+```
+
+#### 顔表情付き版
+```python
+from src.face_voice_conversation import FaceVoiceConversation
+from src.face_display import Emotion
+
+# 顔表情付き音声会話システムを作成
+conversation = FaceVoiceConversation(fullscreen=True)
+
+# 自動音声検出モードで開始
+conversation.start_conversation(auto_mode=True)
+
+# 手動で音声ファイルを処理
+response = conversation.process_audio_file("audio.wav")
+conversation.speak_response(response)
+
+# 手動で表情を設定
+conversation.set_emotion(Emotion.HAPPY)
 ```
 
 ## 対応音声形式
@@ -171,13 +259,16 @@ ai_robo/
 │   ├── ai_chat.py               # AI対話モジュール
 │   ├── text_to_speech.py        # 音声合成モジュール
 │   ├── voice_conversation.py    # 会話システム統合モジュール
+│   ├── face_display.py          # 顔表情表示モジュール
+│   ├── face_voice_conversation.py # 顔表情付き会話システム統合モジュール
 │   └── config.py                # 設定管理モジュール
 ├── config/                       # 設定ファイル
 │   └── env.example              # 環境変数設定例
 ├── docs/                         # ドキュメント
 ├── recordings/                   # 録音ファイル（一時）
 ├── requirements.txt              # 依存関係
-├── voice_chat.py                # メインスクリプト
+├── voice_chat.py                # メインスクリプト（通常版）
+├── face_voice_chat.py           # メインスクリプト（顔表情付き版）
 ├── example_usage.py             # 使用例
 └── README.md                    # このファイル
 ```
@@ -214,7 +305,22 @@ sudo apt update
 sudo apt install mpg123 pygame
 ```
 
-#### 4. 権限エラー
+#### 4. 顔表情が表示されない
+```
+pygame.error: No available video device
+```
+**解決方法**:
+- pygame が正しくインストールされているか確認
+- ディスプレイが接続されているか確認
+- フルスクリーンモードで問題が解決するか確認
+
+#### 5. 表情の切り替えが遅い
+**解決方法**:
+- システムのリソース使用量を確認
+- 他のアプリケーションを終了
+- 画面サイズを小さくしてテスト
+
+#### 6. 権限エラー
 ```
 PermissionError: [Errno 13] Permission denied
 ```
@@ -256,6 +362,15 @@ speaker-test -t wav -c 2
 プルリクエストやイシューの報告を歓迎します。詳細は[開発方針](docs/development_policy.md)を参照してください。
 
 ## 更新履歴
+
+### v1.1.0 (2024-10-15)
+- **顔表情機能追加**
+  - 8種類の感情表現（中性、喜び、悲しみ、怒り、驚き、思考、聞いている、話している）
+  - リアルタイム表情変化
+  - 感情分析による自動表情判定
+  - フルスクリーン対応
+  - アニメーション付き表情切り替え
+  - 音声会話と表情の統合システム
 
 ### v0.2.0 (2024-10-15)
 - **最新モデル対応**
