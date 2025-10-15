@@ -8,9 +8,11 @@ import os
 import logging
 from typing import Optional, Union
 from pathlib import Path
+from dotenv import load_dotenv
 import openai
 from openai import OpenAI
 
+load_dotenv()
 
 class SpeechToText:
     """音声文字起こしクラス"""
