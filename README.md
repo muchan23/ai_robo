@@ -4,14 +4,29 @@ OpenAI Whisper APIを使用した自律型ロボット制御システムの開�
 
 ## 概要
 
-このプロジェクトは、ラズパイで動作する音声認識システムを構築します。OpenAIのWhisper APIを使用して音声をテキストに変換し、将来的にはロボット制御との連携を予定しています。
+このプロジェクトは、ラズパイで動作する音声会話システムを構築します。マイクで音声を認識し、AI（ChatGPT）と対話して、スピーカーから音声で応答を返す完全な音声会話システムです。
 
 ## 機能
 
-- **音声文字起こし**: OpenAI Whisper APIを使用した高精度な音声認識
+### 🎙️ 音声認識
+- **リアルタイム音声検出**: マイクからの音声を自動検出
+- **高精度文字起こし**: OpenAI Whisper APIを使用した高精度な音声認識
+- **日本語対応**: 日本語音声の認識に最適化
+
+### 🤖 AI対話
+- **ChatGPT連携**: OpenAI ChatGPT APIを使用した自然な対話
+- **会話履歴管理**: 文脈を理解した継続的な会話
+- **カスタマイズ可能**: システムプロンプトでAIの性格を設定
+
+### 🔊 音声合成
+- **高品質TTS**: OpenAI TTS APIを使用した自然な音声合成
+- **複数音声対応**: 6種類の音声から選択可能
+- **自動再生**: 生成された音声を自動でスピーカーから再生
+
+### ⚙️ システム機能
 - **設定管理**: 環境変数による柔軟な設定
 - **エラーハンドリング**: 堅牢なエラー処理とログ機能
-- **ラズパイ対応**: Raspberry Piでの動作を考慮した設計
+- **ラズパイ最適化**: Raspberry Piでの動作を考慮した設計
 
 ## セットアップ
 
@@ -42,40 +57,85 @@ OPENAI_API_KEY=your_openai_api_key_here
 3. API Keysセクションで新しいAPIキーを作成
 4. 作成したAPIキーを`.env`ファイルに設定
 
+### 4. ラズパイでの音声デバイス設定
+
+```bash
+# 音声デバイスの確認
+arecord -l  # マイク一覧
+aplay -l    # スピーカー一覧
+
+# デフォルトデバイスの設定（必要に応じて）
+sudo raspi-config
+# Advanced Options > Audio > 適切なデバイスを選択
+```
+
 ## 使用方法
 
 ### 基本的な使用方法
 
+#### 1. 自動音声検出モード（推奨）
+```bash
+python voice_chat.py
+```
+- マイクに向かって話すと自動で音声を検出
+- 話し終わったら少し待つとAIが応答
+- Ctrl+Cで終了
+
+#### 2. 音声ファイル処理モード
+```bash
+python voice_chat.py --file path/to/audio.wav
+```
+- 指定された音声ファイルを処理
+- AI応答を音声で再生
+
+#### 3. テストモード
+```bash
+python voice_chat.py --test
+```
+- 設定の妥当性をチェック
+- システムの動作確認
+
+### 高度な使用方法
+
+#### 音声の種類を変更
+```bash
+python voice_chat.py --voice nova  # 女性の声
+python voice_chat.py --voice onyx  # 男性の声
+```
+
+#### ChatGPTモデルを変更
+```bash
+python voice_chat.py --model gpt-4  # GPT-4を使用（より高精度）
+```
+
+### プログラムからの使用
+
 ```python
-from src.speech_to_text import SpeechToText
+from src.voice_conversation import VoiceConversation
 
-# SpeechToTextインスタンスを作成
-stt = SpeechToText()
+# 音声会話システムを作成
+conversation = VoiceConversation()
 
-# 音声ファイルを文字起こし
-result = stt.transcribe_audio_file("path/to/audio.wav")
-print(result)
-```
+# 自動音声検出モードで開始
+conversation.start_conversation(auto_mode=True)
 
-### コマンドラインからの使用
-
-```bash
-python src/speech_to_text.py path/to/audio.wav --language ja
-```
-
-### 対話的な使用例
-
-```bash
-python example_usage.py
+# 手動で音声ファイルを処理
+response = conversation.process_audio_file("audio.wav")
+conversation.speak_response(response)
 ```
 
 ## 対応音声形式
 
+### 入力（音声認識）
 - WAV
 - MP3
 - M4A
 - FLAC
 - その他Whisper APIがサポートする形式
+
+### 出力（音声合成）
+- MP3（OpenAI TTS API）
+- 自動でスピーカーから再生
 
 ## 設定オプション
 
@@ -88,44 +148,102 @@ python example_usage.py
 | `DEFAULT_LANGUAGE` | `ja` | デフォルト言語 |
 | `LOG_LEVEL` | `INFO` | ログレベル |
 | `SAMPLE_RATE` | `16000` | サンプルレート |
+| `CHUNK_SIZE` | `1024` | チャンクサイズ |
 | `MAX_AUDIO_DURATION` | `30` | 最大録音時間（秒） |
+
+### 音声設定
+
+| パラメータ | デフォルト値 | 説明 |
+|-----------|-------------|------|
+| `--voice` | `alloy` | TTS音声の種類 |
+| `--model` | `gpt-3.5-turbo` | ChatGPTモデル |
 
 ## プロジェクト構造
 
 ```
 ai_robo/
-├── src/                    # ソースコード
+├── src/                           # ソースコード
 │   ├── __init__.py
-│   ├── speech_to_text.py   # 音声文字起こしモジュール
-│   └── config.py          # 設定管理モジュール
-├── config/                # 設定ファイル
-│   └── env.example        # 環境変数設定例
-├── docs/                  # ドキュメント
-├── requirements.txt       # 依存関係
-├── example_usage.py       # 使用例
-└── README.md             # このファイル
+│   ├── speech_to_text.py         # 音声文字起こしモジュール
+│   ├── audio_recorder.py         # 音声録音モジュール
+│   ├── ai_chat.py               # AI対話モジュール
+│   ├── text_to_speech.py        # 音声合成モジュール
+│   ├── voice_conversation.py    # 会話システム統合モジュール
+│   └── config.py                # 設定管理モジュール
+├── config/                       # 設定ファイル
+│   └── env.example              # 環境変数設定例
+├── docs/                         # ドキュメント
+├── recordings/                   # 録音ファイル（一時）
+├── requirements.txt              # 依存関係
+├── voice_chat.py                # メインスクリプト
+├── example_usage.py             # 使用例
+└── README.md                    # このファイル
 ```
-
-## 開発方針
-
-詳細な開発方針については、[docs/development_policy.md](docs/development_policy.md)を参照してください。
 
 ## トラブルシューティング
 
 ### よくある問題
 
-1. **APIキーエラー**
-   - `.env`ファイルに正しいAPIキーが設定されているか確認
-   - APIキーに十分なクレジットがあるか確認
+#### 1. APIキーエラー
+```
+ValueError: OpenAI APIキーが設定されていません
+```
+**解決方法**: `.env`ファイルに正しいAPIキーが設定されているか確認
 
-2. **音声ファイルエラー**
-   - ファイルパスが正しいか確認
-   - 音声ファイルが破損していないか確認
-   - サポートされている音声形式か確認
+#### 2. 音声デバイスエラー
+```
+OSError: [Errno -9996] Invalid input device
+```
+**解決方法**: 
+```bash
+# 音声デバイスを確認
+arecord -l
+# 適切なデバイスを選択
+```
 
-3. **ネットワークエラー**
-   - インターネット接続を確認
-   - ファイアウォール設定を確認
+#### 3. 音声再生エラー
+```
+音声再生に失敗しました。適切なプレイヤーがインストールされていません。
+```
+**解決方法**:
+```bash
+# 音声再生ソフトをインストール
+sudo apt update
+sudo apt install mpg123 pygame
+```
+
+#### 4. 権限エラー
+```
+PermissionError: [Errno 13] Permission denied
+```
+**解決方法**:
+```bash
+# ユーザーをaudioグループに追加
+sudo usermod -a -G audio $USER
+# 再ログインが必要
+```
+
+### デバッグ方法
+
+#### ログレベルの変更
+```bash
+# .envファイルで設定
+LOG_LEVEL=DEBUG
+```
+
+#### 音声デバイスのテスト
+```bash
+# マイクテスト
+arecord -d 5 test.wav
+aplay test.wav
+
+# スピーカーテスト
+speaker-test -t wav -c 2
+```
+
+## 開発方針
+
+詳細な開発方針については、[docs/development_policy.md](docs/development_policy.md)を参照してください。
 
 ## ライセンス
 
@@ -134,3 +252,12 @@ ai_robo/
 ## 貢献
 
 プルリクエストやイシューの報告を歓迎します。詳細は[開発方針](docs/development_policy.md)を参照してください。
+
+## 更新履歴
+
+### v0.1.0 (2024-10-15)
+- 基本的な音声会話システムの実装
+- OpenAI Whisper API連携
+- OpenAI ChatGPT API連携
+- OpenAI TTS API連携
+- ラズパイ対応
