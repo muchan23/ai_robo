@@ -28,18 +28,6 @@ OpenAI Whisper APIを使用した自律型ロボット制御システムの開�
 - **エラーハンドリング**: 堅牢なエラー処理とログ機能
 - **ラズパイ最適化**: Raspberry Piでの動作を考慮した設計
 
-### 🚀 高速化機能（高速版のみ）
-- **並列処理**: ThreadPoolExecutorによる並列実行
-- **応答時間短縮**: 平均応答時間を60%短縮（2-4秒）
-- **パフォーマンス監視**: リアルタイム統計表示
-- **最適化されたAI応答**: 短縮されたトークン数（80トークン）
-
-### ⚡ 最適化機能（最適化版のみ）
-- **バックグラウンド初期化**: 起動時間を大幅短縮（1-2秒）
-- **遅延読み込み**: 必要な時までモジュールを初期化しない
-- **超高速応答**: 最初のターンから2-3秒で応答
-- **超短縮AI応答**: 60トークンによる簡潔な応答
-- **メモリ最適化**: 低メモリ使用量で効率的な動作
 
 ## セットアップ
 
@@ -108,104 +96,22 @@ python voice_chat.py --test
 - 設定の妥当性をチェック
 - システムの動作確認
 
-### 🚀 高速版の使用方法
-
-応答時間を大幅に短縮した高速版システムも利用できます：
-
-#### 1. 高速自動音声検出モード
-```bash
-python fast_voice_chat.py
-```
-- **並列処理**による高速化
-- **短縮されたAI応答**（80トークン）
-- **リアルタイムパフォーマンス監視**
-- 平均応答時間: **2-4秒**（従来版の60%短縮）
-
-#### 2. 高速音声ファイル処理モード
-```bash
-python fast_voice_chat.py --file path/to/audio.wav
-```
-- 音声ファイルの高速処理
-- 並列処理による最適化
-
-#### 3. 高速テストモード
-```bash
-python fast_voice_chat.py --test
-```
-- 高速システムの設定確認
-- 最適化設定の表示
-
-### ⚡ 最適化版の使用方法（最推奨）
-
-最初のターンから超高速応答を実現する最適化版システム：
-
-#### 1. 最適化自動音声検出モード
-```bash
-python optimized_voice_chat.py
-```
-- **バックグラウンド初期化**による起動時間短縮
-- **遅延読み込み**によるメモリ最適化
-- **超短縮AI応答**（60トークン）
-- **最初のターンから2-3秒**で応答
-
-#### 2. 最適化音声ファイル処理モード
-```bash
-python optimized_voice_chat.py --file path/to/audio.wav
-```
-- 音声ファイルの最適化処理
-- バックグラウンド初期化
-
-#### 3. 最適化テストモード
-```bash
-python optimized_voice_chat.py --test
-```
-- 最適化システムの設定確認
-- 初期化時間とパフォーマンス設定の表示
 
 ### 高度な使用方法
 
 #### 音声の種類を変更
 ```bash
-# 通常版
 python voice_chat.py --voice nova  # 女性の声
 python voice_chat.py --voice onyx  # 男性の声
-
-# 高速版
-python fast_voice_chat.py --voice nova  # 女性の声
-python fast_voice_chat.py --voice onyx  # 男性の声
-
-# 最適化版
-python optimized_voice_chat.py --voice nova  # 女性の声
-python optimized_voice_chat.py --voice onyx  # 男性の声
 ```
 
 #### ChatGPTモデルを変更
 ```bash
-# 通常版
 python voice_chat.py --model gpt-4o  # GPT-4oを使用（より高精度）
-
-# 高速版
-python fast_voice_chat.py --model gpt-4o  # GPT-4oを使用（より高精度）
-
-# 最適化版
-python optimized_voice_chat.py --model gpt-4o  # GPT-4oを使用（より高精度）
-```
-
-#### パフォーマンス比較
-```bash
-# 通常版（標準的な応答時間）
-python voice_chat.py
-
-# 高速版（最適化された応答時間）
-python fast_voice_chat.py
-
-# 最適化版（超高速応答時間）
-python optimized_voice_chat.py
 ```
 
 ### プログラムからの使用
 
-#### 通常版
 ```python
 from src.voice_conversation import VoiceConversation
 
@@ -218,46 +124,6 @@ conversation.start_conversation(auto_mode=True)
 # 手動で音声ファイルを処理
 response = conversation.process_audio_file("audio.wav")
 conversation.speak_response(response)
-```
-
-#### 高速版
-```python
-from src.fast_voice_conversation import FastVoiceConversation
-
-# 高速音声会話システムを作成
-conversation = FastVoiceConversation()
-
-# 自動音声検出モードで開始
-conversation.start_conversation(auto_mode=True)
-
-# 手動で音声ファイルを高速処理
-response = conversation.process_audio_file_fast("audio.wav")
-conversation.speak_response_fast(response)
-
-# パフォーマンス統計を取得
-stats = conversation.get_performance_stats()
-print(f"平均応答時間: {stats['avg_response_time']:.2f}秒")
-```
-
-#### 最適化版
-```python
-from src.optimized_voice_conversation import OptimizedVoiceConversation
-
-# 最適化音声会話システムを作成（バックグラウンド初期化開始）
-conversation = OptimizedVoiceConversation()
-
-# 自動音声検出モードで開始
-conversation.start_conversation(auto_mode=True)
-
-# 手動で音声ファイルを最適化処理
-response = conversation.process_audio_file_optimized("audio.wav")
-conversation.speak_response_optimized(response)
-
-# パフォーマンス統計と初期化状態を取得
-stats = conversation.get_performance_stats()
-init_status = conversation.get_initialization_status()
-print(f"初期化時間: {init_status['initialization_time']:.2f}秒")
-print(f"平均応答時間: {stats['avg_response_time']:.2f}秒")
 ```
 
 ## 対応音声形式
@@ -305,17 +171,13 @@ ai_robo/
 │   ├── ai_chat.py               # AI対話モジュール
 │   ├── text_to_speech.py        # 音声合成モジュール
 │   ├── voice_conversation.py    # 会話システム統合モジュール
-│   ├── fast_voice_conversation.py # 高速会話システムモジュール
-│   ├── optimized_voice_conversation.py # 最適化会話システムモジュール
 │   └── config.py                # 設定管理モジュール
 ├── config/                       # 設定ファイル
 │   └── env.example              # 環境変数設定例
 ├── docs/                         # ドキュメント
 ├── recordings/                   # 録音ファイル（一時）
 ├── requirements.txt              # 依存関係
-├── voice_chat.py                # メインスクリプト（通常版）
-├── fast_voice_chat.py           # 高速版メインスクリプト
-├── optimized_voice_chat.py      # 最適化版メインスクリプト
+├── voice_chat.py                # メインスクリプト
 ├── example_usage.py             # 使用例
 └── README.md                    # このファイル
 ```
@@ -395,18 +257,7 @@ speaker-test -t wav -c 2
 
 ## 更新履歴
 
-### v0.3.0 (2024-10-15)
-- **最適化版システムの追加**
-  - バックグラウンド初期化による起動時間短縮（1-2秒）
-  - 遅延読み込みによるメモリ最適化
-  - 最初のターンから2-3秒で応答
-  - 超短縮AI応答（60トークン）
-
 ### v0.2.0 (2024-10-15)
-- **高速版システムの追加**
-  - 並列処理による応答時間60%短縮
-  - リアルタイムパフォーマンス監視
-  - 最適化されたAI応答（80トークン）
 - **最新モデル対応**
   - GPT-4o-miniをデフォルトに変更
   - 最新のOpenAI API機能を活用
