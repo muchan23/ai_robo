@@ -45,6 +45,11 @@ class Config:
         self.whisper_model = os.getenv('WHISPER_MODEL', 'whisper-1')
         self.default_language = os.getenv('DEFAULT_LANGUAGE', 'ja')
         
+        # AI対話設定
+        self.chat_model = os.getenv('CHAT_MODEL', 'gpt-4o-mini')
+        self.tts_voice = os.getenv('TTS_VOICE', 'alloy')
+        self.tts_model = os.getenv('TTS_MODEL', 'tts-1')
+        
         # ログ設定
         self.log_level = os.getenv('LOG_LEVEL', 'INFO')
         self.log_format = os.getenv('LOG_FORMAT', 
@@ -125,7 +130,10 @@ class Config:
         """
         return {
             'api_key': self.openai_api_key,
-            'model': self.whisper_model,
+            'whisper_model': self.whisper_model,
+            'chat_model': self.chat_model,
+            'tts_voice': self.tts_voice,
+            'tts_model': self.tts_model,
             'language': self.default_language,
             'timeout': self.timeout_seconds
         }

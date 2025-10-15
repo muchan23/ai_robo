@@ -62,7 +62,7 @@ class VoiceChatApp:
             
             # 音声会話システムを作成
             self.conversation = VoiceConversation(
-                chat_model="gpt-3.5-turbo",
+                chat_model="gpt-4o-mini",
                 tts_voice="alloy",
                 tts_model="tts-1",
                 whisper_model="whisper-1"
@@ -178,7 +178,7 @@ def main():
     parser.add_argument('--file', help='処理する音声ファイルのパス')
     parser.add_argument('--test', action='store_true', help='テストモード（設定確認）')
     parser.add_argument('--voice', default='alloy', help='TTS音声の種類')
-    parser.add_argument('--model', default='gpt-3.5-turbo', help='ChatGPTモデル')
+    parser.add_argument('--model', default='gpt-4o-mini', help='ChatGPTモデル')
     
     args = parser.parse_args()
     

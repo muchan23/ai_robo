@@ -105,7 +105,7 @@ python voice_chat.py --voice onyx  # 男性の声
 
 #### ChatGPTモデルを変更
 ```bash
-python voice_chat.py --model gpt-4  # GPT-4を使用（より高精度）
+python voice_chat.py --model gpt-4o  # GPT-4oを使用（より高精度）
 ```
 
 ### プログラムからの使用
@@ -156,7 +156,7 @@ conversation.speak_response(response)
 | パラメータ | デフォルト値 | 説明 |
 |-----------|-------------|------|
 | `--voice` | `alloy` | TTS音声の種類 |
-| `--model` | `gpt-3.5-turbo` | ChatGPTモデル |
+| `--model` | `gpt-4o-mini` | ChatGPTモデル |
 
 ## プロジェクト構造
 

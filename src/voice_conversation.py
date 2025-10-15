@@ -23,7 +23,7 @@ class VoiceConversation:
     
     def __init__(self, 
                  api_key: Optional[str] = None,
-                 chat_model: str = "gpt-3.5-turbo",
+                 chat_model: str = "gpt-4o-mini",
                  tts_voice: str = "alloy",
                  tts_model: str = "tts-1",
                  whisper_model: str = "whisper-1",

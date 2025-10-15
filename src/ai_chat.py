@@ -15,7 +15,7 @@ class AIChat:
     
     def __init__(self, 
                  api_key: Optional[str] = None,
-                 model: str = "gpt-3.5-turbo",
+                 model: str = "gpt-4o-mini",
                  system_prompt: Optional[str] = None):
         """
         初期化
