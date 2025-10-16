@@ -146,6 +146,13 @@ python src/face_display.py
 - キーボード操作で表情を手動切り替え
 - キー操作: 0=中性, 1=喜び, 2=悲しみ, 3=怒り, 4=驚き, ESC=終了
 
+#### 6. ヘッドレスモード（ディスプレイなし）
+```bash
+# ディスプレイが利用できない環境でも音声会話は動作
+python face_voice_chat.py
+# → 自動的にヘッドレスモードで動作（表情表示なし）
+```
+
 
 ### 高度な使用方法
 
@@ -308,11 +315,25 @@ sudo apt install mpg123 pygame
 #### 4. 顔表情が表示されない
 ```
 pygame.error: No available video device
+ERROR: Could not make GL context current: BadAccess (attempt to access private resource denied)
 ```
 **解決方法**:
 - pygame が正しくインストールされているか確認
 - ディスプレイが接続されているか確認
 - フルスクリーンモードで問題が解決するか確認
+- ヘッドレスモードで動作するか確認（表情表示なしで音声会話のみ）
+
+**ラズパイでの追加対策**:
+```bash
+# ディスプレイ環境変数を設定
+export DISPLAY=:0
+
+# 仮想ディスプレイを使用
+export SDL_VIDEODRIVER=fbcon
+
+# 権限を確認
+sudo usermod -a -G video $USER
+```
 
 #### 5. 表情の切り替えが遅い
 **解決方法**:

@@ -47,15 +47,30 @@ class FaceDisplay:
         self.logger = logging.getLogger(__name__)
         
         # pygame初期化
-        pygame.init()
-        
-        # 画面設定
-        if fullscreen:
-            self.screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN)
-        else:
-            self.screen = pygame.display.set_mode((screen_width, screen_height))
-        
-        pygame.display.set_caption("AI Robot Face")
+        self.display_available = False
+        try:
+            pygame.init()
+            
+            # ディスプレイの可用性をチェック
+            if not pygame.display.get_init():
+                raise pygame.error("Display not initialized")
+            
+            # 画面設定
+            if fullscreen:
+                self.screen = pygame.display.set_mode((screen_width, screen_height), pygame.FULLSCREEN)
+            else:
+                self.screen = pygame.display.set_mode((screen_width, screen_height))
+            
+            pygame.display.set_caption("AI Robot Face")
+            self.display_available = True
+            self.logger.info("ディスプレイ初期化成功")
+            
+        except (pygame.error, Exception) as e:
+            self.logger.error(f"ディスプレイ初期化エラー: {e}")
+            print(f"ディスプレイ初期化エラー: {e}")
+            print("ヘッドレスモードで動作します（表情表示なし）")
+            self.display_available = False
+            self.screen = None
         
         # 色定義
         self.colors = {
@@ -243,27 +258,35 @@ class FaceDisplay:
     
     def draw_face(self):
         """顔を描画する"""
-        # 背景をクリア
-        self.screen.fill(self.colors['background'])
+        if not self.display_available or self.screen is None:
+            return
         
-        # 顔の中心座標
-        center_x = self.screen_width // 2
-        center_y = self.screen_height // 2
-        
-        # 顔の描画
-        self._draw_face_outline(center_x, center_y)
-        
-        # 目を描画
-        self._draw_eyes(center_x, center_y)
-        
-        # 眉毛を描画
-        self._draw_eyebrows(center_x, center_y)
-        
-        # 口を描画
-        self._draw_mouth(center_x, center_y)
-        
-        # 画面を更新
-        pygame.display.flip()
+        try:
+            # 背景をクリア
+            self.screen.fill(self.colors['background'])
+            
+            # 顔の中心座標
+            center_x = self.screen_width // 2
+            center_y = self.screen_height // 2
+            
+            # 顔の描画
+            self._draw_face_outline(center_x, center_y)
+            
+            # 目を描画
+            self._draw_eyes(center_x, center_y)
+            
+            # 眉毛を描画
+            self._draw_eyebrows(center_x, center_y)
+            
+            # 口を描画
+            self._draw_mouth(center_x, center_y)
+            
+            # 画面を更新
+            pygame.display.flip()
+            
+        except (pygame.error, Exception) as e:
+            self.logger.error(f"描画エラー: {e}")
+            self.display_available = False
     
     def _draw_face_outline(self, center_x: int, center_y: int):
         """顔の輪郭を描画"""
@@ -389,25 +412,33 @@ class FaceDisplay:
         self.logger.info("顔表情表示システムを開始しました")
         
         while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        running = False
-                    elif event.key == pygame.K_1:
-                        self.set_emotion(Emotion.HAPPY)
-                    elif event.key == pygame.K_2:
-                        self.set_emotion(Emotion.SAD)
-                    elif event.key == pygame.K_3:
-                        self.set_emotion(Emotion.ANGRY)
-                    elif event.key == pygame.K_4:
-                        self.set_emotion(Emotion.SURPRISED)
-                    elif event.key == pygame.K_0:
-                        self.set_emotion(Emotion.NEUTRAL)
-            
-            # 顔を描画
-            self.draw_face()
+            if self.display_available:
+                try:
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            running = False
+                        elif event.type == pygame.KEYDOWN:
+                            if event.key == pygame.K_ESCAPE:
+                                running = False
+                            elif event.key == pygame.K_1:
+                                self.set_emotion(Emotion.HAPPY)
+                            elif event.key == pygame.K_2:
+                                self.set_emotion(Emotion.SAD)
+                            elif event.key == pygame.K_3:
+                                self.set_emotion(Emotion.ANGRY)
+                            elif event.key == pygame.K_4:
+                                self.set_emotion(Emotion.SURPRISED)
+                            elif event.key == pygame.K_0:
+                                self.set_emotion(Emotion.NEUTRAL)
+                    
+                    # 顔を描画
+                    self.draw_face()
+                except (pygame.error, Exception) as e:
+                    self.logger.error(f"イベント処理エラー: {e}")
+                    self.display_available = False
+            else:
+                # ヘッドレスモードでは短時間待機
+                time.sleep(0.1)
             
             # FPS制限
             clock.tick(60)

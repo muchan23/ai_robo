@@ -56,11 +56,19 @@ class FaceVoiceConversation:
         )
         
         # 顔表情表示システムを初期化
-        self.face_display = FaceDisplay(
-            screen_width=screen_width,
-            screen_height=screen_height,
-            fullscreen=fullscreen
-        )
+        try:
+            self.face_display = FaceDisplay(
+                screen_width=screen_width,
+                screen_height=screen_height,
+                fullscreen=fullscreen
+            )
+            if self.face_display.display_available:
+                self.logger.info("顔表情表示システムを初期化しました")
+            else:
+                self.logger.warning("ディスプレイが利用できません。ヘッドレスモードで動作します。")
+        except Exception as e:
+            self.logger.error(f"顔表情表示システムの初期化に失敗: {e}")
+            self.face_display = None
         
         # 状態管理
         self.is_running = False
@@ -133,7 +141,8 @@ class FaceVoiceConversation:
         """顔表情表示のメインループ"""
         try:
             # 初期状態を設定
-            self.face_display.set_emotion(Emotion.NEUTRAL, animate=False)
+            if self.face_display and self.face_display.display_available:
+                self.face_display.set_emotion(Emotion.NEUTRAL, animate=False)
             
             # メインループ
             clock = pygame.time.Clock()
@@ -163,7 +172,8 @@ class FaceVoiceConversation:
         self.logger.info(f"ユーザー発言: {text}")
         
         # 表情を「聞いている」状態に変更
-        self.face_display.set_emotion(Emotion.LISTENING)
+        if self.face_display and self.face_display.display_available:
+            self.face_display.set_emotion(Emotion.LISTENING)
         
         # 外部コールバック実行
         if self.on_user_speech:
@@ -175,7 +185,8 @@ class FaceVoiceConversation:
         
         # 応答内容に基づいて表情を決定
         emotion = self._analyze_emotion_from_text(text)
-        self.face_display.set_emotion(emotion)
+        if self.face_display and self.face_display.display_available:
+            self.face_display.set_emotion(emotion)
         
         # 外部コールバック実行
         if self.on_ai_response:
@@ -186,7 +197,8 @@ class FaceVoiceConversation:
         self.logger.error(f"システムエラー: {error}")
         
         # エラー時は悲しい表情
-        self.face_display.set_emotion(Emotion.SAD)
+        if self.face_display and self.face_display.display_available:
+            self.face_display.set_emotion(Emotion.SAD)
         
         # 外部コールバック実行
         if self.on_error:
@@ -240,7 +252,8 @@ class FaceVoiceConversation:
             emotion: 設定する感情
             animate: アニメーションするかどうか
         """
-        self.face_display.set_emotion(emotion, animate)
+        if self.face_display and self.face_display.display_available:
+            self.face_display.set_emotion(emotion, animate)
     
     def process_audio_file(self, audio_file_path: str) -> str:
         """
@@ -253,14 +266,16 @@ class FaceVoiceConversation:
             AI応答のテキスト
         """
         # 聞いている表情に変更
-        self.face_display.set_emotion(Emotion.LISTENING)
+        if self.face_display and self.face_display.display_available:
+            self.face_display.set_emotion(Emotion.LISTENING)
         
         # 音声処理
         response = self.voice_conversation.process_audio_file(audio_file_path)
         
         # 応答内容に基づいて表情を変更
         emotion = self._analyze_emotion_from_text(response)
-        self.face_display.set_emotion(emotion)
+        if self.face_display and self.face_display.display_available:
+            self.face_display.set_emotion(emotion)
         
         return response
     
@@ -272,19 +287,22 @@ class FaceVoiceConversation:
             text: 再生するテキスト
         """
         # 話している表情に変更
-        self.face_display.set_emotion(Emotion.SPEAKING)
+        if self.face_display and self.face_display.display_available:
+            self.face_display.set_emotion(Emotion.SPEAKING)
         
         # 音声再生
         self.voice_conversation.speak_response(text)
         
         # 再生完了後は中性に戻す
         time.sleep(0.5)  # 少し待機
-        self.face_display.set_emotion(Emotion.NEUTRAL)
+        if self.face_display and self.face_display.display_available:
+            self.face_display.set_emotion(Emotion.NEUTRAL)
     
     def reset_conversation(self):
         """会話履歴をリセットする"""
         self.voice_conversation.reset_conversation()
-        self.face_display.set_emotion(Emotion.NEUTRAL)
+        if self.face_display and self.face_display.display_available:
+            self.face_display.set_emotion(Emotion.NEUTRAL)
         self.logger.info("会話履歴をリセットしました")
     
     def set_system_prompt(self, prompt: str):
