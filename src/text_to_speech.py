@@ -118,8 +118,8 @@ class TextToSpeech:
                 # MP3ファイルの場合
                 self._play_mp3(audio_path)
             else:
-                # その他の場合はpygameを使用
-                self._play_with_pygame(audio_path)
+                # その他の場合はシステムコマンドを使用
+                self._play_with_system_command(audio_path)
                 
         except Exception as e:
             self.logger.error(f"音声再生エラー: {e}")
@@ -143,35 +143,9 @@ class TextToSpeech:
             self.logger.info("音声再生完了（mpg123）")
             
         except (subprocess.CalledProcessError, FileNotFoundError):
-            # mpg123がない場合は他の方法を試す
-            self._play_with_pygame(audio_path)
+            # mpg123がない場合はシステムコマンドを使用
+            self._play_with_system_command(audio_path)
     
-    def _play_with_pygame(self, audio_path: Path):
-        """pygameを使用して音声を再生"""
-        try:
-            import pygame
-            
-            # pygameを初期化
-            pygame.mixer.init()
-            
-            # 音声ファイルを読み込み
-            pygame.mixer.music.load(str(audio_path))
-            
-            # 再生
-            pygame.mixer.music.play()
-            
-            # 再生完了まで待機
-            while pygame.mixer.music.get_busy():
-                pygame.time.wait(100)
-            
-            self.logger.info("音声再生完了（pygame）")
-            
-        except ImportError:
-            self.logger.warning("pygameがインストールされていません。システムコマンドを使用します。")
-            self._play_with_system_command(audio_path)
-        except Exception as e:
-            self.logger.error(f"pygame再生エラー: {e}")
-            self._play_with_system_command(audio_path)
     
     def _play_with_system_command(self, audio_path: Path):
         """システムコマンドを使用して音声を再生"""
