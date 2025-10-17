@@ -7,10 +7,11 @@ OpenAI Whisper APIを使用した自律型ロボット制御システムの開�
 このプロジェクトは、ラズパイで動作する音声会話システムを構築します。マイクで音声を認識し、AI（ChatGPT）と対話して、スピーカーから音声で応答を返す完全な音声会話システムです。
 
 ### 🚀 ハイブリッドシステム（推奨）
-**Whisper.cpp（ローカル音声認識）+ OpenAI（ChatGPT + TTS）**
+**faster-whisper（ローカル音声認識）+ OpenAI（ChatGPT + TTS）**
 - 高速な音声認識（ファイル保存なし）
 - プライバシー保護（音声データはローカル処理）
 - 高品質なAI対話と音声合成
+- ビルドエラーなしで簡単インストール
 
 ### 📱 従来システム
 **OpenAI API（Whisper + ChatGPT + TTS）**
@@ -85,18 +86,14 @@ sudo raspi-config
 
 ### 🚀 ハイブリッドシステム（推奨）
 
-**Whisper.cpp（ローカル音声認識）+ OpenAI（ChatGPT + TTS）**
+**faster-whisper（ローカル音声認識）+ OpenAI（ChatGPT + TTS）**
 
 #### セットアップ
 ```bash
-# 1. Whisper.cppをセットアップ
-chmod +x setup_whisper_cpp.sh
-./setup_whisper_cpp.sh
-
-# 2. 依存関係をインストール
+# 1. 依存関係をインストール
 pip install -r requirements.txt
 
-# 3. 環境変数を設定
+# 2. 環境変数を設定
 cp config/env.example .env
 # .envファイルにOpenAI APIキーを設定
 ```
@@ -117,10 +114,11 @@ python hybrid_voice_chat.py --test
 ```
 
 #### 特徴
-- ✅ **高速**: ファイル保存なしで200-500ms高速化
+- ✅ **高速**: faster-whisperで高速な音声認識
 - ✅ **プライバシー**: 音声データはローカル処理
 - ✅ **高品質**: ChatGPT + TTS APIで高品質な対話
 - ✅ **柔軟**: モデルサイズを選択可能
+- ✅ **安定**: ビルドエラーなしで簡単インストール
 
 #### モデルサイズ選択
 | モデル | サイズ | 速度 | 精度 | 用途 |
@@ -169,7 +167,7 @@ python hybrid_voice_chat.py --voice onyx  # 男性の声
 # ChatGPTモデルを変更
 python hybrid_voice_chat.py --model gpt-4o  # GPT-4oを使用（より高精度）
 
-# Whisper.cppモデルサイズを変更
+# faster-whisperモデルサイズを変更
 python hybrid_voice_chat.py --whisper-model medium  # より高精度
 python hybrid_voice_chat.py --whisper-model tiny    # より高速
 ```
@@ -192,7 +190,7 @@ from src.hybrid_voice_conversation import HybridVoiceConversation
 
 # ハイブリッド音声会話システムを作成
 conversation = HybridVoiceConversation(
-    whisper_model_size="small"  # モデルサイズを指定
+    whisper_model_size="small"  # faster-whisperモデルサイズを指定
 )
 
 # 自動音声検出モードで開始
@@ -259,7 +257,7 @@ ai_robo/
 ├── src/                           # ソースコード
 │   ├── __init__.py
 │   ├── speech_to_text.py         # 音声文字起こしモジュール（OpenAI API）
-│   ├── whisper_cpp_stt.py        # Whisper.cpp音声認識モジュール（ローカル）
+│   ├── whisper_cpp_stt.py        # faster-whisper音声認識モジュール（ローカル）
 │   ├── audio_recorder.py         # 音声録音モジュール
 │   ├── ai_chat.py               # AI対話モジュール
 │   ├── text_to_speech.py        # 音声合成モジュール
@@ -271,7 +269,6 @@ ai_robo/
 ├── docs/                         # ドキュメント
 ├── recordings/                   # 録音ファイル（一時）
 ├── requirements.txt              # 依存関係
-├── setup_whisper_cpp.sh         # Whisper.cppセットアップスクリプト
 ├── voice_chat.py                # メインスクリプト（従来版）
 ├── hybrid_voice_chat.py         # メインスクリプト（ハイブリッド版）
 ├── example_usage.py             # 使用例
@@ -289,36 +286,22 @@ ValueError: OpenAI APIキーが設定されていません
 ```
 **解決方法**: `.env`ファイルに正しいAPIキーが設定されているか確認
 
-#### 2. Whisper.cppモデルが見つからない（ハイブリッドシステム）
+#### 2. faster-whisperがインストールできない（ハイブリッドシステム）
 ```
-FileNotFoundError: Whisper.cppモデルファイルが見つかりません
-```
-**解決方法**:
-```bash
-# セットアップスクリプトを実行
-chmod +x setup_whisper_cpp.sh
-./setup_whisper_cpp.sh
-
-# または手動でモデルをダウンロード
-cd whisper.cpp
-bash ./models/download-ggml-model.sh small
-```
-
-#### 3. whisper-cpp-pythonがインストールできない
-```
-ImportError: whisper-cpp-pythonがインストールされていません
+ImportError: faster-whisperがインストールされていません
 ```
 **解決方法**:
 ```bash
-# 依存関係をインストール
+# faster-whisperをインストール
+pip install faster-whisper
+
+# または依存関係をインストール
 sudo apt update
-sudo apt install build-essential cmake
-
-# Pythonバインディングをインストール
-pip install whisper-cpp-python
+sudo apt install build-essential
+pip install faster-whisper
 ```
 
-#### 4. 音声デバイスエラー
+#### 3. 音声デバイスエラー
 ```
 OSError: [Errno -9996] Invalid input device
 ```
@@ -329,7 +312,7 @@ arecord -l
 # 適切なデバイスを選択
 ```
 
-#### 5. 音声再生エラー
+#### 4. 音声再生エラー
 ```
 音声再生に失敗しました。適切なプレイヤーがインストールされていません。
 ```
@@ -340,7 +323,7 @@ sudo apt update
 sudo apt install mpg123
 ```
 
-#### 6. メモリ不足エラー（ハイブリッドシステム）
+#### 5. メモリ不足エラー（ハイブリッドシステム）
 ```
 RuntimeError: メモリ不足
 ```
@@ -352,7 +335,7 @@ python hybrid_voice_chat.py --whisper-model tiny
 python hybrid_voice_chat.py --whisper-model base
 ```
 
-#### 7. 権限エラー
+#### 6. 権限エラー
 ```
 PermissionError: [Errno 13] Permission denied
 ```
@@ -397,12 +380,13 @@ speaker-test -t wav -c 2
 
 ### v1.0.0 (2024-10-15)
 - **ハイブリッドシステム追加**
-  - Whisper.cpp（ローカル音声認識）+ OpenAI（ChatGPT + TTS）
-  - ファイル保存なしで200-500ms高速化
+  - faster-whisper（ローカル音声認識）+ OpenAI（ChatGPT + TTS）
+  - 高速な音声認識（ファイル保存なし）
   - プライバシー保護（音声データはローカル処理）
   - モデルサイズ選択可能（tiny, base, small, medium, large）
-- **セットアップ自動化**
-  - Whisper.cpp自動セットアップスクリプト
+  - ビルドエラーなしで簡単インストール
+- **セットアップ簡素化**
+  - faster-whisperによる安定したインストール
   - 詳細なセットアップガイド
 
 ### v0.2.0 (2024-10-15)
