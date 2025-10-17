@@ -9,6 +9,9 @@ pyaudio>=0.2.11
 # 音声合成
 pyttsx3>=2.90  # オフラインTTS（オプション）
 
+# Whisper.cpp（ハイブリッドシステム用）
+whisper-cpp-python>=0.1.0  # Whisper.cpp Pythonバインディング
+
 # 設定管理
 python-dotenv>=1.0.0
 
