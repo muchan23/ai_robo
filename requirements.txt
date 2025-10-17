@@ -10,7 +10,7 @@ pyaudio>=0.2.11
 pyttsx3>=2.90  # オフラインTTS（オプション）
 
 # Whisper.cpp（ハイブリッドシステム用）
-whisper-cpp-python>=0.1.0  # Whisper.cpp Pythonバインディング
+faster-whisper>=0.10.0  # faster-whisper（Whisper.cppの代替）
 
 # 設定管理
 python-dotenv>=1.0.0

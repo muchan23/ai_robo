@@ -13,11 +13,11 @@ from typing import List, Optional, Union
 from pathlib import Path
 
 try:
-    import whisper_cpp
-    WHISPER_CPP_AVAILABLE = True
+    from faster_whisper import WhisperModel
+    FASTER_WHISPER_AVAILABLE = True
 except ImportError:
-    WHISPER_CPP_AVAILABLE = False
-    whisper_cpp = None
+    FASTER_WHISPER_AVAILABLE = False
+    WhisperModel = None
 
 
 class WhisperCppSTT:
@@ -36,45 +36,17 @@ class WhisperCppSTT:
         self.logger = logging.getLogger(__name__)
         self.model_size = model_size
         
-        if not WHISPER_CPP_AVAILABLE:
-            raise ImportError("whisper-cpp-pythonがインストールされていません。pip install whisper-cpp-python を実行してください。")
+        if not FASTER_WHISPER_AVAILABLE:
+            raise ImportError("faster-whisperがインストールされていません。pip install faster-whisper を実行してください。")
         
-        # モデルパスの設定
-        if model_path is None:
-            model_path = self._find_default_model()
-        
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"Whisper.cppモデルファイルが見つかりません: {model_path}")
-        
-        self.model_path = model_path
-        self.logger.info(f"Whisper.cppモデルを読み込み中: {model_path}")
-        
-        # Whisper.cppモデルを初期化
+        # faster-whisperモデルを初期化
         try:
-            self.whisper = whisper_cpp.Whisper(model_path)
-            self.logger.info("Whisper.cppモデルの初期化が完了しました")
+            self.whisper = WhisperModel(model_size, device="cpu", compute_type="int8")
+            self.logger.info(f"faster-whisperモデル（{model_size}）の初期化が完了しました")
         except Exception as e:
-            self.logger.error(f"Whisper.cppモデルの初期化に失敗: {e}")
+            self.logger.error(f"faster-whisperモデルの初期化に失敗: {e}")
             raise
     
-    def _find_default_model(self) -> str:
-        """デフォルトのモデルパスを検索"""
-        possible_paths = [
-            # カレントディレクトリ
-            f"whisper.cpp/models/ggml-{self.model_size}.bin",
-            f"models/ggml-{self.model_size}.bin",
-            # ホームディレクトリ
-            f"{os.path.expanduser('~')}/whisper.cpp/models/ggml-{self.model_size}.bin",
-            # システムパス
-            f"/usr/local/share/whisper.cpp/models/ggml-{self.model_size}.bin",
-        ]
-        
-        for path in possible_paths:
-            if os.path.exists(path):
-                self.logger.info(f"モデルファイルを発見: {path}")
-                return path
-        
-        raise FileNotFoundError(f"Whisper.cppモデルファイルが見つかりません。以下のパスを確認してください: {possible_paths}")
     
     def transcribe_audio_file(self, audio_file_path: Union[str, Path]) -> str:
         """
@@ -93,28 +65,19 @@ class WhisperCppSTT:
         self.logger.info(f"音声ファイルを文字起こし中: {audio_path}")
         
         try:
-            # Whisper.cppで文字起こし
-            result = self.whisper.transcribe(str(audio_path))
+            # faster-whisperで文字起こし
+            segments, info = self.whisper.transcribe(str(audio_path), language="ja")
             
             # 結果からテキストを抽出
-            if hasattr(result, 'text'):
-                text = result.text
-            elif isinstance(result, str):
-                text = result
-            else:
-                # 結果が辞書やリストの場合
-                if isinstance(result, dict) and 'text' in result:
-                    text = result['text']
-                elif isinstance(result, list) and len(result) > 0:
-                    text = result[0].get('text', '') if isinstance(result[0], dict) else str(result[0])
-                else:
-                    text = str(result)
+            text = ""
+            for segment in segments:
+                text += segment.text
             
             self.logger.info(f"文字起こし完了: {text[:50]}...")
             return text.strip()
             
         except Exception as e:
-            self.logger.error(f"Whisper.cpp文字起こしエラー: {e}")
+            self.logger.error(f"faster-whisper文字起こしエラー: {e}")
             raise
     
     def transcribe_audio_data(self, audio_frames: List[bytes], 
@@ -143,16 +106,13 @@ class WhisperCppSTT:
                 temp_path = temp_file.name
             
             try:
-                # Whisper.cppで文字起こし
-                result = self.whisper.transcribe(temp_path)
+                # faster-whisperで文字起こし
+                segments, info = self.whisper.transcribe(temp_path, language="ja")
                 
                 # 結果からテキストを抽出
-                if hasattr(result, 'text'):
-                    text = result.text
-                elif isinstance(result, str):
-                    text = result
-                else:
-                    text = str(result)
+                text = ""
+                for segment in segments:
+                    text += segment.text
                 
                 self.logger.info(f"文字起こし完了: {text[:50]}...")
                 return text.strip()
@@ -165,7 +125,7 @@ class WhisperCppSTT:
                     self.logger.warning(f"一時ファイルの削除に失敗: {e}")
             
         except Exception as e:
-            self.logger.error(f"Whisper.cpp文字起こしエラー: {e}")
+            self.logger.error(f"faster-whisper文字起こしエラー: {e}")
             raise
     
     def _create_wav_buffer(self, audio_frames: List[bytes], 
@@ -185,9 +145,8 @@ class WhisperCppSTT:
     def get_model_info(self) -> dict:
         """モデル情報を取得"""
         return {
-            'model_path': self.model_path,
             'model_size': self.model_size,
-            'available': WHISPER_CPP_AVAILABLE
+            'available': FASTER_WHISPER_AVAILABLE
         }
 
 
