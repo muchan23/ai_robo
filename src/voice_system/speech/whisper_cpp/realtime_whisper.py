@@ -10,7 +10,7 @@ import threading
 import time
 import numpy as np
 from typing import Optional, Callable
-from .whisper_cpp_stt import WhisperCppSTT
+from src.voice_system.speech.whisper_cpp.whisper_cpp_stt import WhisperCppSTT
 
 
 class RealtimeWhisper:
@@ -173,6 +173,8 @@ def main():
     
     print("🎤 Whisper.cppリアルタイム音声認識テスト")
     print("=" * 50)
+    print("💡 注意: このファイルを直接実行する場合は、プロジェクトルートから実行してください")
+    print("   推奨: python test_realtime_mic.py")
     
     def on_transcription(text: str):
         print(f"🎤 認識結果: {text}")
@@ -211,4 +213,9 @@ def main():
 
 
 if __name__ == "__main__":
+    # プロジェクトルートをパスに追加
+    import sys
+    from pathlib import Path
+    sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent))
+    
     exit(main())
