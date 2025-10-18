@@ -1,28 +1,36 @@
 #!/usr/bin/env python3
 """
-Whisper.cppリアルタイム音声認識モジュール
-マイクからの音声をリアルタイムで文字起こし
+独立実行可能なWhisper.cppリアルタイム音声認識スクリプト
+ラズパイ用
 """
 
-import pyaudio
+import sys
+import os
 import logging
 import threading
 import time
 import numpy as np
+import pyaudio
+import tempfile
+import wave
+from pathlib import Path
 from typing import Optional, Callable
-# 相対importと絶対importの両方に対応
+
+# プロジェクトルートをPythonパスに追加
+project_root = Path(__file__).parent
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / 'src'))
+
 try:
-    from .whisper_cpp_stt import WhisperCppSTT
+    from faster_whisper import WhisperModel
+    FASTER_WHISPER_AVAILABLE = True
 except ImportError:
-    # 直接実行時のフォールバック
-    import sys
-    from pathlib import Path
-    sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent))
-    from src.voice_system.speech.whisper_cpp.whisper_cpp_stt import WhisperCppSTT
+    FASTER_WHISPER_AVAILABLE = False
+    WhisperModel = None
 
 
-class RealtimeWhisper:
-    """リアルタイム音声認識クラス"""
+class StandaloneRealtimeWhisper:
+    """独立実行可能なリアルタイム音声認識クラス"""
     
     def __init__(self, 
                  model_size: str = "small",
@@ -42,9 +50,18 @@ class RealtimeWhisper:
         self.sample_rate = sample_rate
         self.chunk_size = chunk_size
         self.channels = channels
+        self.model_size = model_size
         
-        # WhisperCppSTTを初期化
-        self.stt = WhisperCppSTT(model_size=model_size)
+        if not FASTER_WHISPER_AVAILABLE:
+            raise ImportError("faster-whisperがインストールされていません。pip install faster-whisper を実行してください。")
+        
+        # faster-whisperモデルを初期化
+        try:
+            self.whisper = WhisperModel(model_size, device="cpu", compute_type="int8")
+            self.logger.info(f"faster-whisperモデル（{model_size}）の初期化が完了しました")
+        except Exception as e:
+            self.logger.error(f"faster-whisperモデルの初期化に失敗: {e}")
+            raise
         
         # 音声ストリーム
         self.audio_stream = None
@@ -159,19 +176,37 @@ class RealtimeWhisper:
             文字起こしされたテキスト
         """
         try:
-            # WhisperCppSTTの内部メソッドを使用
-            return self.stt._transcribe_audio_array(
-                audio_array, 
-                self.sample_rate, 
-                "ja"
-            )
+            # 一時ファイルを作成
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+                # WAVファイルとして保存
+                with wave.open(temp_file.name, 'wb') as wav_file:
+                    wav_file.setnchannels(1)
+                    wav_file.setsampwidth(2)  # 16bit
+                    wav_file.setframerate(self.sample_rate)
+                    wav_file.writeframes(audio_array.tobytes())
+                
+                # 文字起こし実行
+                segments, info = self.whisper.transcribe(temp_file.name, language="ja")
+                
+                # セグメントを結合
+                text_parts = []
+                for segment in segments:
+                    text_parts.append(segment.text.strip())
+                
+                result = " ".join(text_parts)
+                
+                # 一時ファイルを削除
+                os.unlink(temp_file.name)
+                
+                return result
+                
         except Exception as e:
             self.logger.error(f"音声チャンク文字起こしエラー: {e}")
             return ""
 
 
 def main():
-    """テスト用のメイン関数"""
+    """メイン関数"""
     
     # ログ設定
     logging.basicConfig(
@@ -179,10 +214,8 @@ def main():
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    print("🎤 Whisper.cppリアルタイム音声認識テスト")
-    print("=" * 50)
-    print("💡 注意: このファイルを直接実行する場合は、プロジェクトルートから実行してください")
-    print("   推奨: python test_realtime_mic.py")
+    print("🎤 独立実行Whisper.cppリアルタイム音声認識")
+    print("=" * 60)
     
     def on_transcription(text: str):
         print(f"🎤 認識結果: {text}")
@@ -191,8 +224,9 @@ def main():
         print(f"❌ エラー: {error}")
     
     try:
-        # RealtimeWhisperインスタンスを作成
-        realtime_whisper = RealtimeWhisper(model_size="small")
+        # StandaloneRealtimeWhisperインスタンスを作成
+        print("📦 StandaloneRealtimeWhisperを初期化中...")
+        realtime_whisper = StandaloneRealtimeWhisper(model_size="small")
         
         print("🎯 マイクからの音声認識を開始します")
         print("💡 話しかけてください...")
@@ -213,6 +247,12 @@ def main():
             realtime_whisper.stop_listening()
             print("✅ テストを停止しました")
             
+    except ImportError as e:
+        print(f"❌ 依存関係エラー: {e}")
+        print("💡 解決方法:")
+        print("   pip install faster-whisper numpy pyaudio")
+        return 1
+        
     except Exception as e:
         print(f"❌ エラーが発生しました: {e}")
         return 1
@@ -221,9 +261,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # プロジェクトルートをパスに追加
-    import sys
-    from pathlib import Path
-    sys.path.append(str(Path(__file__).parent.parent.parent.parent.parent))
-    
     exit(main())
