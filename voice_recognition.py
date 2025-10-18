@@ -12,6 +12,7 @@ import pyaudio
 import numpy as np
 import tempfile
 import wave
+import pygame
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -42,6 +43,9 @@ class VoiceRecognition:
         self.audio = pyaudio.PyAudio()
         self.stream = None
         self.is_recording = False
+        
+        # 音声合図用
+        pygame.mixer.init()
         
         self.logger.info("音声認識システムを初期化しました")
     
@@ -97,14 +101,54 @@ class VoiceRecognition:
                 self.stream.close()
             raise
     
-    def detect_speech(self, duration=3):
+    def play_sound(self, sound_type="start"):
         """
-        音声検出録音（音声が検出されるまで録音）
+        音声合図を再生
         
         Args:
-            duration: 最大録音時間（秒）
+            sound_type: 音声の種類 ("start", "end", "error")
         """
-        self.logger.info("音声検出録音を開始します")
+        try:
+            if sound_type == "start":
+                # 開始音（ビープ音）
+                frequency = 800
+                duration = 0.2
+            elif sound_type == "end":
+                # 終了音（ビープ音）
+                frequency = 600
+                duration = 0.3
+            elif sound_type == "error":
+                # エラー音（ビープ音）
+                frequency = 400
+                duration = 0.5
+            else:
+                return
+            
+            # ビープ音を生成
+            sample_rate = 22050
+            frames = int(duration * sample_rate)
+            arr = np.zeros(frames)
+            
+            for i in range(frames):
+                arr[i] = np.sin(2 * np.pi * frequency * i / sample_rate)
+            
+            # 音声を再生
+            sound = pygame.sndarray.make_sound((arr * 32767).astype(np.int16))
+            sound.play()
+            pygame.time.wait(int(duration * 1000))
+            
+        except Exception as e:
+            self.logger.warning(f"音声合図の再生に失敗: {e}")
+    
+    def wait_for_speech(self):
+        """
+        音声を待機（音声が検出されるまで待機）
+        
+        Returns:
+            音声データ（バイト）
+        """
+        self.logger.info("音声を待機中...")
+        print("🎤 音声を待機中... (話しかけてください)")
         
         try:
             # 音声ストリームを開く
@@ -117,42 +161,57 @@ class VoiceRecognition:
             )
             
             frames = []
+            speech_detected = False
+            speech_started = False
             silent_frames = 0
-            max_silent_frames = int(self.sample_rate / self.chunk_size * 2)  # 2秒間の無音
-            max_frames = int(self.sample_rate / self.chunk_size * duration)
+            max_silent_frames = int(self.sample_rate / self.chunk_size * 1.5)  # 1.5秒間の無音
             
-            for i in range(max_frames):
+            while True:
                 data = self.stream.read(self.chunk_size)
-                frames.append(data)
-                
-                # 音声レベルをチェック
                 audio_array = np.frombuffer(data, dtype=np.int16)
                 max_amplitude = np.max(np.abs(audio_array))
                 
+                # 音声検出
                 if max_amplitude > self.audio_threshold:
+                    if not speech_started:
+                        print("🎤 音声を検出しました！録音開始...")
+                        self.play_sound("start")
+                        speech_started = True
+                        speech_detected = True
+                    
+                    frames.append(data)
                     silent_frames = 0
                     self.logger.debug(f"音声検出: レベル={max_amplitude}")
                 else:
-                    silent_frames += 1
-                
-                # 無音が続いたら録音終了
-                if silent_frames > max_silent_frames and len(frames) > int(self.sample_rate / self.chunk_size * 1):
-                    self.logger.info("無音検出により録音を終了します")
-                    break
+                    if speech_started:
+                        silent_frames += 1
+                        frames.append(data)  # 無音部分も録音
+                        
+                        # 無音が続いたら録音終了
+                        if silent_frames > max_silent_frames:
+                            print("🎤 音声録音完了")
+                            self.play_sound("end")
+                            break
+                    else:
+                        # 音声が検出される前は無音をスキップ
+                        continue
             
             # ストリームを閉じる
             self.stream.stop_stream()
             self.stream.close()
             self.stream = None
             
+            if not speech_detected:
+                self.logger.warning("音声が検出されませんでした")
+                return None
+            
             # 音声データを結合
             audio_data = b''.join(frames)
-            
-            self.logger.info(f"音声検出録音が完了しました（{len(frames)}フレーム）")
+            self.logger.info(f"音声録音が完了しました（{len(frames)}フレーム）")
             return audio_data
             
         except Exception as e:
-            self.logger.error(f"音声検出録音エラー: {e}")
+            self.logger.error(f"音声待機エラー: {e}")
             if self.stream:
                 self.stream.stop_stream()
                 self.stream.close()
@@ -223,26 +282,29 @@ def main():
         
         while True:
             try:
-                # 音声検出録音
-                print("\n🎤 音声を検出中...")
-                audio_data = voice_recognition.detect_speech(duration=10)
+                # 音声を待機（音声が検出されるまで待機）
+                audio_data = voice_recognition.wait_for_speech()
                 
-                if len(audio_data) > 0:
+                if audio_data:
                     # 文字起こし実行
+                    print("📝 文字起こし中...")
                     result = voice_recognition.transcribe_audio(audio_data)
                     
                     if result:
                         print(f"📝 認識結果: {result}")
                     else:
                         print("❌ 音声が認識されませんでした")
+                        voice_recognition.play_sound("error")
                 else:
                     print("❌ 音声が検出されませんでした")
+                    voice_recognition.play_sound("error")
                     
             except KeyboardInterrupt:
                 print("\n🛑 終了します...")
                 break
             except Exception as e:
                 print(f"❌ エラー: {e}")
+                voice_recognition.play_sound("error")
                 continue
         
     except Exception as e:
