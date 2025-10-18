@@ -3,7 +3,7 @@
 音声の認識と音声合成機能
 """
 
-from .recognition import SpeechToText
-from .synthesis import TextToSpeech
+from src.voice_system.speech.recognition import SpeechToText
+from src.voice_system.speech.synthesis import TextToSpeech
 
 __all__ = ['SpeechToText', 'TextToSpeech']

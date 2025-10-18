@@ -11,11 +11,11 @@ import threading
 from typing import Optional, Callable
 from pathlib import Path
 
-from .speech.recognition import SpeechToText
-from .ai.chat import AIChat
-from .speech.synthesis import TextToSpeech
-from .audio.recorder import AudioRecorder
-from ..config import get_config
+from src.voice_system.speech.recognition import SpeechToText
+from src.voice_system.ai.chat import AIChat
+from src.voice_system.speech.synthesis import TextToSpeech
+from src.voice_system.audio.recorder import AudioRecorder
+from src.config import get_config
 
 
 class VoiceConversation:

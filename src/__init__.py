@@ -8,8 +8,8 @@ __author__ = "AI Robot Team"
 __description__ = "OpenAI Whisper APIを使用した音声認識システム"
 
 # 主要モジュールのインポート
-from .config import Config, get_config
-from .voice_system import VoiceConversation, AudioRecorder, SpeechToText, TextToSpeech, AIChat
+from src.config import Config, get_config
+from src.voice_system import VoiceConversation, AudioRecorder, SpeechToText, TextToSpeech, AIChat
 
 __all__ = [
     'Config', 
