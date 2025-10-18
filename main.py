@@ -16,6 +16,7 @@ sys.path.insert(0, str(project_root))
 from src.ai.ai_chat import AIChat
 from src.tts.tts_synthesis import TTSSynthesis
 from src.audio.voice_recognition_simple import VoiceRecognition
+from src.display.gif_player import GIFPlayer
 
 def main():
     """メイン関数"""
@@ -27,6 +28,7 @@ def main():
         voice_recognition = VoiceRecognition()
         ai_chat = AIChat()
         tts = TTSSynthesis()
+        gif_player = GIFPlayer()
         
         print("🎯 音声対話を開始します")
         print("💡 話しかけてください...")
@@ -45,6 +47,10 @@ def main():
                     if transcribed_text:
                         print(f"📝 認識結果: {transcribed_text}")
                         
+                        # GIF表示開始
+                        print("🎬 GIF表示を開始します")
+                        gif_player.show_random_gif()
+                        
                         # AI対話実行
                         print("🤖 AI応答を生成中...")
                         ai_response = ai_chat.chat(transcribed_text)
@@ -54,6 +60,11 @@ def main():
                         print("🔊 音声合成中...")
                         tts.speak_text(ai_response)
                         print("✅ 音声再生完了")
+                        
+                        # GIF表示終了（少し待機後）
+                        import time
+                        time.sleep(2)
+                        gif_player.stop()
                         
                     else:
                         print("❌ 音声が認識されませんでした")
@@ -78,6 +89,8 @@ def main():
             voice_recognition.cleanup()
         if 'tts' in locals():
             tts.cleanup()
+        if 'gif_player' in locals():
+            gif_player.cleanup()
     
     return 0
 

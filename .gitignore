@@ -50,6 +50,11 @@ venv.bak/
 recordings/
 audio_files/
 
+# アセットファイル（大きなファイルは除外）
+assets/gifs/*.gif
+assets/videos/*.mp4
+assets/audio/*.wav
+
 # ログファイル
 *.log
 logs/
