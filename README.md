@@ -1,6 +1,6 @@
-# ラズパイ音声認識システム
+# ラズパイ音声対話システム
 
-OpenAI Whisper APIを使用した音声認識システムです。
+OpenAI APIを使用した完全な音声対話システムです。
 
 ## 🚀 セットアップ
 
@@ -12,7 +12,7 @@ pip install -r requirements.txt
 ### 2. 環境設定
 ```bash
 # 設定ファイルをコピー
-cp config.env.example .env
+cp env.example .env
 
 # .envファイルを編集してAPIキーを設定
 nano .env
@@ -21,6 +21,9 @@ nano .env
 `.env`ファイルの内容：
 ```
 OPENAI_API_KEY=your_openai_api_key_here
+CHAT_MODEL=gpt-4o-mini
+TTS_MODEL=tts-1
+TTS_VOICE=alloy
 SAMPLE_RATE=16000
 CHUNK_SIZE=1024
 AUDIO_THRESHOLD=1000
@@ -40,7 +43,13 @@ aplay -l
 
 ### 基本的な実行
 ```bash
-python voice_recognition.py
+# 統合システム（推奨）
+python main.py
+
+# 個別テスト
+python tests/test_audio.py    # 音声認識テスト
+python tests/test_ai.py        # AI対話テスト
+python tests/test_tts.py       # 音声合成テスト
 ```
 
 ### 機能
