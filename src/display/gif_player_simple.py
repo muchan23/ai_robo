@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 """
-GIF表示システム
-音声対話中にGIFアニメーションを表示
+GIF表示システム（簡易版）
+スレッドエラーを回避した安全な実装
 """
 
 import os
 import sys
 import time
-import threading
 import logging
+import threading
 from pathlib import Path
-from tkinter import Tk, Label, PhotoImage
+from tkinter import Tk, Label
 from PIL import Image, ImageTk
-import tkinter as tk
 
-class GIFPlayer:
-    """GIF表示クラス"""
+class GIFPlayerSimple:
+    """GIF表示クラス（簡易版）"""
     
     def __init__(self, gif_folder="assets/gifs"):
         """初期化"""
@@ -25,7 +24,8 @@ class GIFPlayer:
         self.label = None
         self.current_gif = None
         self.is_playing = False
-        self.animation_thread = None
+        self.frames = []
+        self.current_frame = 0
         
         # GIFファイルのリストを取得
         self.gif_files = self._get_gif_files()
@@ -73,6 +73,9 @@ class GIFPlayer:
         # キーバインド
         self.root.bind('<Escape>', self._on_escape)
         self.root.bind('<F11>', self._toggle_fullscreen)
+        self.root.bind('<space>', self._toggle_gif)  # スペースキーでGIF表示切り替え
+        self.root.bind('<h>', self._hide_gif)       # HキーでGIF非表示
+        self.root.bind('<s>', self._show_gif)        # SキーでGIF表示
         
         self.logger.info("GIF表示ウィンドウを作成しました")
     
@@ -83,6 +86,26 @@ class GIFPlayer:
     def _toggle_fullscreen(self, event):
         """F11キーでフルスクリーン切り替え"""
         self.root.attributes('-fullscreen', not self.root.attributes('-fullscreen'))
+    
+    def _toggle_gif(self, event):
+        """スペースキーでGIF表示切り替え"""
+        if self.is_playing:
+            self._hide_gif(event)
+        else:
+            self._show_gif(event)
+    
+    def _hide_gif(self, event):
+        """HキーでGIF非表示"""
+        self.is_playing = False
+        if self.label:
+            self.label.configure(image='')
+        print("🎬 GIF表示を停止しました")
+    
+    def _show_gif(self, event):
+        """SキーでGIF表示"""
+        if not self.is_playing:
+            self.start_continuous_display()
+        print("🎬 GIF表示を開始しました")
     
     def _load_gif(self, gif_path):
         """GIFファイルを読み込み"""
@@ -105,89 +128,20 @@ class GIFPlayer:
             self.logger.error(f"GIF読み込みエラー: {e}")
             return None
     
-    def _animate_gif(self, frames, duration=100):
-        """GIFアニメーションを実行"""
-        try:
-            frame_index = 0
-            while self.is_playing and self.root:
-                if frame_index < len(frames):
-                    self.label.configure(image=frames[frame_index])
-                    frame_index = (frame_index + 1) % len(frames)
-                    time.sleep(duration / 1000.0)
-                else:
-                    frame_index = 0
-        except Exception as e:
-            self.logger.error(f"アニメーションエラー: {e}")
-    
-    def play_gif(self, gif_path=None, duration=100):
-        """
-        GIFを再生
-        
-        Args:
-            gif_path: GIFファイルのパス（Noneの場合はランダム選択）
-            duration: フレーム間隔（ミリ秒）
-        """
-        if not self.gif_files:
-            self.logger.warning("GIFファイルが見つかりません")
-            return
-        
-        # GIFファイルを選択
-        if gif_path is None:
-            import random
-            gif_path = random.choice(self.gif_files)
-        
-        if not os.path.exists(gif_path):
-            self.logger.error(f"GIFファイルが見つかりません: {gif_path}")
-            return
-        
-        self.logger.info(f"GIF再生開始: {gif_path}")
-        
-        try:
-            # ウィンドウを作成（まだ作成されていない場合）
-            if self.root is None:
-                self._create_window()
-            
-            # GIFを読み込み
-            frames = self._load_gif(gif_path)
-            if not frames:
-                return
-            
-            # アニメーションを開始
-            self.is_playing = True
-            self.animation_thread = threading.Thread(
-                target=self._animate_gif, 
-                args=(frames, duration)
-            )
-            self.animation_thread.daemon = True
-            self.animation_thread.start()
-            
-            # ウィンドウを表示
-            self.root.deiconify()
-            self.root.lift()
-            self.root.focus_force()
-            
-        except Exception as e:
-            self.logger.error(f"GIF再生エラー: {e}")
-    
-    def stop(self):
-        """GIF再生を停止"""
-        self.logger.info("GIF再生を停止します")
-        self.is_playing = False
-        
-        if self.animation_thread and self.animation_thread.is_alive():
-            self.animation_thread.join(timeout=1.0)
-        
-        if self.root:
-            self.root.quit()
-            self.root.destroy()
-            self.root = None
-    
-    def show_random_gif(self, duration=100):
-        """ランダムなGIFを表示"""
-        if self.gif_files:
-            import random
-            gif_path = random.choice(self.gif_files)
-            self.play_gif(gif_path, duration)
+    def _animate_gif(self):
+        """GIFアニメーションを実行（メインスレッドで実行）"""
+        if self.is_playing and self.frames and self.label:
+            try:
+                # 現在のフレームを表示
+                self.label.configure(image=self.frames[self.current_frame])
+                self.current_frame = (self.current_frame + 1) % len(self.frames)
+                
+                # 次のフレームをスケジュール
+                if self.root:
+                    self.root.after(100, self._animate_gif)
+                    
+            except Exception as e:
+                self.logger.error(f"アニメーションエラー: {e}")
     
     def start_continuous_display(self, duration=100):
         """
@@ -212,44 +166,34 @@ class GIFPlayer:
             gif_path = random.choice(self.gif_files)
             
             # GIFを読み込み
-            frames = self._load_gif(gif_path)
-            if not frames:
+            self.frames = self._load_gif(gif_path)
+            if not self.frames:
                 return
             
             # アニメーションを開始
             self.is_playing = True
-            self.animation_thread = threading.Thread(
-                target=self._animate_gif, 
-                args=(frames, duration)
-            )
-            self.animation_thread.daemon = True
-            self.animation_thread.start()
+            self.current_frame = 0
             
             # ウィンドウを表示
             self.root.deiconify()
             self.root.lift()
             self.root.focus_force()
             
-            # ウィンドウのイベントループを非同期で開始
-            self._start_window_loop()
+            # アニメーションを開始（メインスレッドで実行）
+            self._animate_gif()
             
         except Exception as e:
             self.logger.error(f"継続的GIF表示エラー: {e}")
     
-    def _start_window_loop(self):
-        """ウィンドウのイベントループを開始（メインスレッドで実行）"""
-        # ウィンドウの更新を定期的に実行
-        self._update_window()
-    
-    def _update_window(self):
-        """ウィンドウを更新（メインスレッドで実行）"""
-        if self.root and self.is_playing:
-            try:
-                self.root.update()
-                # 100ms後に再実行
-                self.root.after(100, self._update_window)
-            except Exception as e:
-                self.logger.error(f"ウィンドウ更新エラー: {e}")
+    def stop(self):
+        """GIF再生を停止"""
+        self.logger.info("GIF再生を停止します")
+        self.is_playing = False
+        
+        if self.root:
+            self.root.quit()
+            self.root.destroy()
+            self.root = None
     
     def cleanup(self):
         """リソースのクリーンアップ"""
@@ -259,24 +203,29 @@ class GIFPlayer:
 
 def main():
     """テスト用のメイン関数"""
-    print("🎬 GIF表示システムテスト")
+    print("🎬 GIF表示システムテスト（簡易版）")
     print("=" * 50)
     
     try:
         # GIF表示システムを初期化
-        gif_player = GIFPlayer()
+        gif_player = GIFPlayerSimple()
         
         if not gif_player.gif_files:
             print("❌ GIFファイルが見つかりません")
-            print("💡 gifsフォルダにGIFファイルを配置してください")
+            print("💡 assets/gifsフォルダにGIFファイルを配置してください")
             return 1
         
         print(f"✅ {len(gif_player.gif_files)}個のGIFファイルを発見")
         print("🎯 GIF表示を開始します")
-        print("💡 ESCキーで終了、F11キーでフルスクリーン切り替え")
+        print("💡 操作方法:")
+        print("   ESCキー: 終了")
+        print("   F11キー: フルスクリーン切り替え")
+        print("   スペースキー: GIF表示切り替え")
+        print("   Hキー: GIF非表示")
+        print("   Sキー: GIF表示")
         
-        # ランダムなGIFを表示
-        gif_player.show_random_gif()
+        # 継続的にGIFを表示
+        gif_player.start_continuous_display()
         
         # ウィンドウのイベントループを開始
         if gif_player.root:
