@@ -12,8 +12,10 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-# 音声認識システムをインポート
-from src.audio.voice_recognition import VoiceRecognition
+# 各モジュールを直接インポート
+from src.ai.ai_chat import AIChat
+from src.tts.tts_synthesis import TTSSynthesis
+from src.audio.voice_recognition_simple import VoiceRecognition
 
 def main():
     """メイン関数"""
@@ -21,8 +23,10 @@ def main():
     print("=" * 50)
     
     try:
-        # 音声認識システムを初期化
+        # 各システムを初期化
         voice_recognition = VoiceRecognition()
+        ai_chat = AIChat()
+        tts = TTSSynthesis()
         
         print("🎯 音声対話を開始します")
         print("💡 話しかけてください...")
@@ -43,12 +47,12 @@ def main():
                         
                         # AI対話実行
                         print("🤖 AI応答を生成中...")
-                        ai_response = voice_recognition.ai_chat.chat(transcribed_text)
+                        ai_response = ai_chat.chat(transcribed_text)
                         print(f"🤖 AI応答: {ai_response}")
                         
                         # 音声合成・再生
                         print("🔊 音声合成中...")
-                        voice_recognition.tts.speak_text(ai_response)
+                        tts.speak_text(ai_response)
                         print("✅ 音声再生完了")
                         
                     else:
@@ -72,6 +76,8 @@ def main():
     finally:
         if 'voice_recognition' in locals():
             voice_recognition.cleanup()
+        if 'tts' in locals():
+            tts.cleanup()
     
     return 0
 

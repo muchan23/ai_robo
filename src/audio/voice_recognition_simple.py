@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ラズパイ音声認識システム
-マイク音声入力から音声認識まで
+音声認識システム（簡易版）
+インポートエラーを回避した独立版
 """
 
 import os
@@ -16,18 +16,6 @@ import pygame
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
-
-# 相対インポートを試行、失敗した場合は絶対インポート
-try:
-    from ..ai.ai_chat import AIChat
-    from ..tts.tts_synthesis import TTSSynthesis
-except ImportError:
-    # 絶対インポートにフォールバック
-    import sys
-    from pathlib import Path
-    sys.path.append(str(Path(__file__).parent.parent.parent))
-    from src.ai.ai_chat import AIChat
-    from src.tts.tts_synthesis import TTSSynthesis
 
 # 環境変数を読み込み
 load_dotenv()
@@ -59,12 +47,6 @@ class VoiceRecognition:
         # 音声合図用
         pygame.mixer.init()
         
-        # AI対話システムを初期化
-        self.ai_chat = AIChat()
-        
-        # 音声合成システムを初期化
-        self.tts = TTSSynthesis()
-        
         self.logger.info("音声認識システムを初期化しました")
     
     def _setup_logging(self):
@@ -75,49 +57,6 @@ class VoiceRecognition:
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
         return logging.getLogger(__name__)
-    
-    def start_recording(self, duration=5):
-        """
-        音声録音を開始
-        
-        Args:
-            duration: 録音時間（秒）
-        """
-        self.logger.info(f"音声録音を開始します（{duration}秒間）")
-        
-        try:
-            # 音声ストリームを開く
-            self.stream = self.audio.open(
-                format=pyaudio.paInt16,
-                channels=1,
-                rate=self.sample_rate,
-                input=True,
-                frames_per_buffer=self.chunk_size
-            )
-            
-            # 音声データを収集
-            frames = []
-            for _ in range(0, int(self.sample_rate / self.chunk_size * duration)):
-                data = self.stream.read(self.chunk_size)
-                frames.append(data)
-            
-            # ストリームを閉じる
-            self.stream.stop_stream()
-            self.stream.close()
-            self.stream = None
-            
-            # 音声データを結合
-            audio_data = b''.join(frames)
-            
-            self.logger.info("音声録音が完了しました")
-            return audio_data
-            
-        except Exception as e:
-            self.logger.error(f"音声録音エラー: {e}")
-            if self.stream:
-                self.stream.stop_stream()
-                self.stream.close()
-            raise
     
     def play_sound(self, sound_type="start"):
         """
@@ -283,68 +222,3 @@ class VoiceRecognition:
             self.stream.close()
         self.audio.terminate()
         self.logger.info("リソースをクリーンアップしました")
-
-
-def main():
-    """メイン関数"""
-    print("🎤 ラズパイ音声認識システム")
-    print("=" * 50)
-    
-    try:
-        # 音声認識システムを初期化
-        voice_recognition = VoiceRecognition()
-        
-        print("🎯 音声認識を開始します")
-        print("💡 話しかけてください...")
-        print("⏹️  Ctrl+C で終了")
-        
-        while True:
-            try:
-                # 音声を待機（音声が検出されるまで待機）
-                audio_data = voice_recognition.wait_for_speech()
-                
-                if audio_data:
-                    # 文字起こし実行
-                    print("📝 文字起こし中...")
-                    transcribed_text = voice_recognition.transcribe_audio(audio_data)
-                    
-                    if transcribed_text:
-                        print(f"📝 認識結果: {transcribed_text}")
-                        
-                        # AI対話実行
-                        print("🤖 AI応答を生成中...")
-                        ai_response = voice_recognition.ai_chat.chat(transcribed_text)
-                        print(f"🤖 AI応答: {ai_response}")
-                        
-                        # 音声合成・再生
-                        print("🔊 音声合成中...")
-                        voice_recognition.tts.speak_text(ai_response)
-                        print("✅ 音声再生完了")
-                        
-                    else:
-                        print("❌ 音声が認識されませんでした")
-                        voice_recognition.play_sound("error")
-                else:
-                    print("❌ 音声が検出されませんでした")
-                    voice_recognition.play_sound("error")
-                    
-            except KeyboardInterrupt:
-                print("\n🛑 終了します...")
-                break
-            except Exception as e:
-                print(f"❌ エラー: {e}")
-                voice_recognition.play_sound("error")
-                continue
-        
-    except Exception as e:
-        print(f"❌ 初期化エラー: {e}")
-        return 1
-    finally:
-        if 'voice_recognition' in locals():
-            voice_recognition.cleanup()
-    
-    return 0
-
-
-if __name__ == "__main__":
-    exit(main())
