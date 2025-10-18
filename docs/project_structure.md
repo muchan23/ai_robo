@@ -11,26 +11,20 @@ ai_robo/
 │
 ├── src/                     # ソースコード
 │   ├── __init__.py
-│   ├── main.py             # メイン実行ファイル
-│   ├── audio/              # 音声処理モジュール
+│   ├── config.py            # 設定管理モジュール
+│   ├── voice_system/        # 音声システム（メイン）
 │   │   ├── __init__.py
-│   │   ├── recorder.py     # 音声録音
-│   │   ├── player.py       # 音声再生
-│   │   └── processor.py    # 音声前処理
-│   ├── speech/             # 音声認識・合成モジュール
-│   │   ├── __init__.py
-│   │   ├── recognition.py  # OpenAI Whisper API
-│   │   ├── synthesis.py    # 音声合成
-│   │   └── conversation.py # 対話処理
-│   ├── robot/              # ロボット制御モジュール（将来）
-│   │   ├── __init__.py
-│   │   ├── controller.py   # ハードウェア制御
-│   │   └── sensors.py      # センサー制御
-│   └── utils/              # ユーティリティ
-│       ├── __init__.py
-│       ├── config.py       # 設定管理
-│       ├── logger.py       # ログ管理
-│       └── helpers.py      # ヘルパー関数
+│   │   ├── conversation.py  # 統合会話システム
+│   │   ├── audio/           # 音声処理関連
+│   │   │   ├── __init__.py
+│   │   │   └── recorder.py  # 音声録音
+│   │   ├── speech/          # 音声認識・合成
+│   │   │   ├── __init__.py
+│   │   │   ├── recognition.py # OpenAI Whisper API
+│   │   │   └── synthesis.py # 音声合成
+│   │   └── ai/              # AI対話関連
+│   │       ├── __init__.py
+│   │       └── chat.py      # AI対話
 │
 ├── config/                 # 設定ファイル
 │   ├── audio_config.yaml   # 音声設定
@@ -64,28 +58,23 @@ ai_robo/
 
 ## モジュール説明
 
-### src/audio/
+### src/voice_system/
+音声システムのメインモジュール
+- **conversation.py**: 統合会話システム（音声認識→AI対話→音声合成）
+
+### src/voice_system/audio/
 音声の入出力と前処理を担当
 - **recorder.py**: マイクからの音声録音
-- **player.py**: スピーカーへの音声再生
-- **processor.py**: ノイズ除去、音量調整等
 
-### src/speech/
+### src/voice_system/speech/
 音声認識と音声合成を担当
 - **recognition.py**: OpenAI Whisper API連携
 - **synthesis.py**: テキストから音声への変換
-- **conversation.py**: 対話ロジックの処理
 
-### src/robot/
-ロボットのハードウェア制御を担当（将来実装）
-- **controller.py**: モーター、センサー制御
-- **sensors.py**: 環境センサーの読み取り
+### src/voice_system/ai/
+AI対話機能を担当
+- **chat.py**: ChatGPT API連携と対話管理
 
-### src/utils/
-共通のユーティリティ機能
-- **config.py**: 設定ファイルの読み込み
-- **logger.py**: ログ出力の管理
-- **helpers.py**: 共通のヘルパー関数
 
 ## 設定ファイル
 

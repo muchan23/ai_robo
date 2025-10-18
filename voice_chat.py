@@ -13,7 +13,7 @@ from pathlib import Path
 # プロジェクトのsrcディレクトリをパスに追加
 sys.path.append(str(Path(__file__).parent / 'src'))
 
-from voice_conversation import VoiceConversation
+from voice_system.conversation import VoiceConversation
 from config import get_config
 
 

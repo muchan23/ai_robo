@@ -10,7 +10,7 @@ from pathlib import Path
 # プロジェクトのsrcディレクトリをパスに追加
 sys.path.append(str(Path(__file__).parent / 'src'))
 
-from speech_to_text import SpeechToText
+from voice_system.speech.recognition import SpeechToText
 from config import get_config
 
 
