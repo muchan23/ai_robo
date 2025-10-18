@@ -16,7 +16,7 @@ sys.path.insert(0, str(project_root))
 from src.ai.ai_chat import AIChat
 from src.tts.tts_synthesis import TTSSynthesis
 from src.audio.voice_recognition_simple import VoiceRecognition
-from src.display.gif_player_simple import GIFPlayerSimple as GIFPlayer
+from src.display.gif_player_ultra_simple import GIFPlayerUltraSimple as GIFPlayer
 
 def main():
     """メイン関数"""

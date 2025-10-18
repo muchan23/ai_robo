@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 """
-GIF表示システム（簡易版）
-スレッドエラーを回避した安全な実装
+GIF表示システム（超簡易版）
+アニメーションエラーを完全に回避した実装
 """
 
 import os
 import sys
 import time
 import logging
-import threading
 from pathlib import Path
 from tkinter import Tk, Label
 from PIL import Image, ImageTk
 
-class GIFPlayerSimple:
-    """GIF表示クラス（簡易版）"""
+class GIFPlayerUltraSimple:
+    """GIF表示クラス（超簡易版）"""
     
     def __init__(self, gif_folder="assets/gifs"):
         """初期化"""
@@ -24,8 +23,6 @@ class GIFPlayerSimple:
         self.label = None
         self.current_gif = None
         self.is_playing = False
-        self.frames = []
-        self.current_frame = 0
         
         # GIFファイルのリストを取得
         self.gif_files = self._get_gif_files()
@@ -101,16 +98,6 @@ class GIFPlayerSimple:
             self.label.configure(image='')
         print("🎬 GIF表示を停止しました")
     
-    def _stop_animation(self):
-        """アニメーションを完全に停止"""
-        self.is_playing = False
-        if self.root:
-            try:
-                # スケジュールされたイベントをキャンセル
-                self.root.after_cancel("all")
-            except:
-                pass
-    
     def _show_gif(self, event):
         """SキーでGIF表示"""
         if not self.is_playing:
@@ -118,58 +105,35 @@ class GIFPlayerSimple:
         print("🎬 GIF表示を開始しました")
     
     def _load_gif(self, gif_path):
-        """GIFファイルを読み込み"""
+        """GIFファイルを読み込み（最初のフレームのみ）"""
         try:
             # PILでGIFを読み込み
             gif = Image.open(gif_path)
-            frames = []
             
-            # フレームを抽出
-            for frame in range(gif.n_frames):
-                gif.seek(frame)
-                # フレームをリサイズ（必要に応じて）
-                frame_resized = gif.resize((800, 600), Image.Resampling.LANCZOS)
-                frames.append(ImageTk.PhotoImage(frame_resized))
+            # 最初のフレームのみを取得
+            gif.seek(0)
+            frame_resized = gif.resize((800, 600), Image.Resampling.LANCZOS)
+            frame_image = ImageTk.PhotoImage(frame_resized)
             
-            self.logger.info(f"GIFを読み込みました: {gif_path} ({len(frames)}フレーム)")
-            return frames
+            self.logger.info(f"GIFを読み込みました: {gif_path} (最初のフレームのみ)")
+            return frame_image
             
         except Exception as e:
             self.logger.error(f"GIF読み込みエラー: {e}")
             return None
     
-    def _animate_gif(self):
-        """GIFアニメーションを実行（メインスレッドで実行）"""
-        if not self.is_playing or not self.frames or not self.label or not self.root:
-            return
-            
-        try:
-            # 現在のフレームを表示
-            if self.current_frame < len(self.frames):
-                self.label.configure(image=self.frames[self.current_frame])
-                self.current_frame = (self.current_frame + 1) % len(self.frames)
-            
-            # 次のフレームをスケジュール（条件をチェック）
-            if self.is_playing and self.root and self.label:
-                self.root.after(100, self._animate_gif)
-                    
-        except Exception as e:
-            self.logger.error(f"アニメーションエラー: {e}")
-            # エラーが発生した場合はアニメーションを停止
-            self.is_playing = False
-    
     def start_continuous_display(self, duration=100):
         """
-        継続的にGIFを表示（音声対話中ずっと表示）
+        継続的にGIFを表示（静止画として表示）
         
         Args:
-            duration: フレーム間隔（ミリ秒）
+            duration: フレーム間隔（ミリ秒）- この実装では使用しない
         """
         if not self.gif_files:
             self.logger.warning("GIFファイルが見つかりません")
             return
         
-        self.logger.info("継続的GIF表示を開始します")
+        self.logger.info("継続的GIF表示を開始します（静止画モード）")
         
         try:
             # ウィンドウを作成（まだ作成されていない場合）
@@ -180,22 +144,19 @@ class GIFPlayerSimple:
             import random
             gif_path = random.choice(self.gif_files)
             
-            # GIFを読み込み
-            self.frames = self._load_gif(gif_path)
-            if not self.frames:
+            # GIFを読み込み（最初のフレームのみ）
+            frame_image = self._load_gif(gif_path)
+            if not frame_image:
                 return
             
-            # アニメーションを開始
+            # 静止画として表示
             self.is_playing = True
-            self.current_frame = 0
+            self.label.configure(image=frame_image)
             
             # ウィンドウを表示
             self.root.deiconify()
             self.root.lift()
             self.root.focus_force()
-            
-            # アニメーションを開始（メインスレッドで実行）
-            self._animate_gif()
             
         except Exception as e:
             self.logger.error(f"継続的GIF表示エラー: {e}")
@@ -203,7 +164,7 @@ class GIFPlayerSimple:
     def stop(self):
         """GIF再生を停止"""
         self.logger.info("GIF再生を停止します")
-        self._stop_animation()
+        self.is_playing = False
         
         if self.root:
             try:
@@ -221,12 +182,12 @@ class GIFPlayerSimple:
 
 def main():
     """テスト用のメイン関数"""
-    print("🎬 GIF表示システムテスト（簡易版）")
+    print("🎬 GIF表示システムテスト（超簡易版）")
     print("=" * 50)
     
     try:
         # GIF表示システムを初期化
-        gif_player = GIFPlayerSimple()
+        gif_player = GIFPlayerUltraSimple()
         
         if not gif_player.gif_files:
             print("❌ GIFファイルが見つかりません")
@@ -234,7 +195,7 @@ def main():
             return 1
         
         print(f"✅ {len(gif_player.gif_files)}個のGIFファイルを発見")
-        print("🎯 GIF表示を開始します")
+        print("🎯 GIF表示を開始します（静止画モード）")
         print("💡 操作方法:")
         print("   ESCキー: 終了")
         print("   F11キー: フルスクリーン切り替え")
