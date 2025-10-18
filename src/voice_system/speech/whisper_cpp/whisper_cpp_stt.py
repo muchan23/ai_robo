@@ -9,7 +9,10 @@ import logging
 import io
 import wave
 import tempfile
-from typing import List, Optional, Union
+import threading
+import time
+import numpy as np
+from typing import List, Optional, Union, Callable
 from pathlib import Path
 
 try:
@@ -120,6 +123,103 @@ class WhisperCppSTT:
         except Exception as e:
             self.logger.error(f"音声データ文字起こしエラー: {e}")
             raise
+    
+    
+    def start_realtime_transcription(self, 
+                                   audio_callback: Callable[[bytes], None],
+                                   sample_rate: int = 16000,
+                                   chunk_duration: float = 1.0,
+                                   language: str = "ja") -> None:
+        """
+        リアルタイム音声認識を開始する
+        
+        Args:
+            audio_callback: 音声データを受け取るコールバック関数
+            sample_rate: サンプルレート
+            chunk_duration: チャンクの長さ（秒）
+            language: 言語コード
+        """
+        self.logger.info("リアルタイム音声認識を開始します")
+        
+        # 音声バッファ
+        audio_buffer = []
+        buffer_size = int(sample_rate * chunk_duration)
+        
+        def process_audio_chunk(audio_data: bytes):
+            """音声チャンクを処理する"""
+            try:
+                # 音声データをnumpy配列に変換
+                audio_array = np.frombuffer(audio_data, dtype=np.int16)
+                audio_buffer.extend(audio_array)
+                
+                # バッファが十分な長さになったら文字起こし
+                if len(audio_buffer) >= buffer_size:
+                    # バッファから音声データを取得
+                    chunk_audio = np.array(audio_buffer[:buffer_size], dtype=np.int16)
+                    audio_buffer = audio_buffer[buffer_size:]
+                    
+                    # 文字起こし実行
+                    result = self._transcribe_audio_array(chunk_audio, sample_rate, language)
+                    
+                    if result.strip():
+                        self.logger.info(f"リアルタイム認識: {result}")
+                        # コールバック関数を呼び出し
+                        audio_callback(result.encode('utf-8'))
+                        
+            except Exception as e:
+                self.logger.error(f"リアルタイム音声処理エラー: {e}")
+        
+        # 音声コールバックを設定
+        self._audio_callback = process_audio_chunk
+    
+    
+    def _transcribe_audio_array(self, audio_array: np.ndarray, 
+                              sample_rate: int, language: str) -> str:
+        """
+        音声配列を文字起こしする
+        
+        Args:
+            audio_array: 音声データのnumpy配列
+            sample_rate: サンプルレート
+            language: 言語コード
+            
+        Returns:
+            文字起こしされたテキスト
+        """
+        try:
+            # 一時ファイルを作成
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+                # WAVファイルとして保存
+                with wave.open(temp_file.name, 'wb') as wav_file:
+                    wav_file.setnchannels(1)
+                    wav_file.setsampwidth(2)  # 16bit
+                    wav_file.setframerate(sample_rate)
+                    wav_file.writeframes(audio_array.tobytes())
+                
+                # 文字起こし実行
+                segments, info = self.whisper.transcribe(temp_file.name, language=language)
+                
+                # セグメントを結合
+                text_parts = []
+                for segment in segments:
+                    text_parts.append(segment.text.strip())
+                
+                result = " ".join(text_parts)
+                
+                # 一時ファイルを削除
+                os.unlink(temp_file.name)
+                
+                return result
+                
+        except Exception as e:
+            self.logger.error(f"音声配列文字起こしエラー: {e}")
+            return ""
+    
+    
+    def stop_realtime_transcription(self) -> None:
+        """リアルタイム音声認識を停止する"""
+        self.logger.info("リアルタイム音声認識を停止します")
+        self._audio_callback = None
     
     
     def get_model_info(self) -> dict:

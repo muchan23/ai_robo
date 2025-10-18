@@ -11,6 +11,7 @@ pyttsx3>=2.90  # オフラインTTS（オプション）
 
 # Whisper.cpp（ローカル音声認識）
 faster-whisper>=0.10.0  # faster-whisper（Whisper.cppの代替）
+numpy>=1.21.0  # 数値計算（音声データ処理用）
 
 # 設定管理
 python-dotenv>=1.0.0

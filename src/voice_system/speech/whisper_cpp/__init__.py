@@ -4,5 +4,6 @@ Whisper.cpp音声認識モジュール
 """
 
 from .whisper_cpp_stt import WhisperCppSTT
+from .realtime_whisper import RealtimeWhisper
 
-__all__ = ['WhisperCppSTT']
+__all__ = ['WhisperCppSTT', 'RealtimeWhisper']
