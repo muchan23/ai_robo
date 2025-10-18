@@ -47,6 +47,8 @@ python voice_recognition.py
 - **音声検出録音**: 音声が検出されるまで録音
 - **自動文字起こし**: OpenAI Whisper APIで音声をテキストに変換
 - **AI対話**: OpenAI ChatGPT APIで自然な対話
+- **音声合成**: OpenAI TTS APIで音声を生成
+- **音声再生**: スピーカーから音声を再生
 - **音声合図**: ビープ音で状態を通知
 - **日本語対応**: 日本語音声の認識に最適化
 
@@ -55,14 +57,20 @@ python voice_recognition.py
 2. 「音声を待機中...」と表示されたら話しかける
 3. 音声が検出されると自動で文字起こし実行
 4. AI応答が生成される
-5. 結果が表示される
-6. Ctrl+C で終了
+5. AI応答が音声で再生される
+6. 結果が表示される
+7. Ctrl+C で終了
 
 ## 🔧 設定オプション
 
 ### AI対話設定
 - `CHAT_MODEL`: ChatGPTモデル（デフォルト: gpt-4o-mini）
 - `SYSTEM_PROMPT`: システムプロンプト
+
+### 音声合成設定
+- `TTS_MODEL`: TTSモデル（デフォルト: tts-1）
+- `TTS_VOICE`: 音声の種類（alloy, echo, fable, onyx, nova, shimmer）
+- `TTS_SPEED`: 音声速度（0.25 - 4.0）
 
 ### 音声設定
 - `SAMPLE_RATE`: サンプルレート（デフォルト: 16000）

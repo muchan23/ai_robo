@@ -17,6 +17,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 from ai_chat import AIChat
+from tts_synthesis import TTSSynthesis
 
 # 環境変数を読み込み
 load_dotenv()
@@ -50,6 +51,9 @@ class VoiceRecognition:
         
         # AI対話システムを初期化
         self.ai_chat = AIChat()
+        
+        # 音声合成システムを初期化
+        self.tts = TTSSynthesis()
         
         self.logger.info("音声認識システムを初期化しました")
     
@@ -301,6 +305,11 @@ def main():
                         print("🤖 AI応答を生成中...")
                         ai_response = voice_recognition.ai_chat.chat(transcribed_text)
                         print(f"🤖 AI応答: {ai_response}")
+                        
+                        # 音声合成・再生
+                        print("🔊 音声合成中...")
+                        voice_recognition.tts.speak_text(ai_response)
+                        print("✅ 音声再生完了")
                         
                     else:
                         print("❌ 音声が認識されませんでした")
