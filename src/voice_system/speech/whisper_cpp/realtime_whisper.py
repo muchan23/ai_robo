@@ -10,7 +10,7 @@ import threading
 import time
 import numpy as np
 from typing import Optional, Callable
-from src.voice_system.speech.whisper_cpp.whisper_cpp_stt import WhisperCppSTT
+from .whisper_cpp_stt import WhisperCppSTT
 
 
 class RealtimeWhisper:
