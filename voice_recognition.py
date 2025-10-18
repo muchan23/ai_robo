@@ -16,6 +16,7 @@ import pygame
 from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
+from ai_chat import AIChat
 
 # 環境変数を読み込み
 load_dotenv()
@@ -46,6 +47,9 @@ class VoiceRecognition:
         
         # 音声合図用
         pygame.mixer.init()
+        
+        # AI対話システムを初期化
+        self.ai_chat = AIChat()
         
         self.logger.info("音声認識システムを初期化しました")
     
@@ -288,10 +292,16 @@ def main():
                 if audio_data:
                     # 文字起こし実行
                     print("📝 文字起こし中...")
-                    result = voice_recognition.transcribe_audio(audio_data)
+                    transcribed_text = voice_recognition.transcribe_audio(audio_data)
                     
-                    if result:
-                        print(f"📝 認識結果: {result}")
+                    if transcribed_text:
+                        print(f"📝 認識結果: {transcribed_text}")
+                        
+                        # AI対話実行
+                        print("🤖 AI応答を生成中...")
+                        ai_response = voice_recognition.ai_chat.chat(transcribed_text)
+                        print(f"🤖 AI応答: {ai_response}")
+                        
                     else:
                         print("❌ 音声が認識されませんでした")
                         voice_recognition.play_sound("error")
