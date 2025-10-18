@@ -53,14 +53,13 @@ ai_robo/
 ├── main.py                    # メインスクリプト
 ├── requirements.txt           # 依存関係
 ├── env.example               # 環境設定例
-├── assets/                   # アセットファイル
+├── assets/                   # アセットファイル（GIF等）
 │   └── gifs/                 # GIFアニメーション
 │       └── *.gif
 ├── src/                      # ソースコード
 │   ├── audio/                # 音声処理
 │   ├── ai/                   # AI対話
-│   ├── tts/                  # 音声合成
-│   └── display/              # 表示機能
+│   └── tts/                  # 音声合成
 └── tests/                    # テスト
 ```
 
@@ -68,20 +67,13 @@ ai_robo/
 
 ### 基本的な実行
 ```bash
-# 音声対話のみ（推奨・安定版）
-python main_simple.py
-
-# 音声対話 + GIF表示（実験版）
-python main_with_gif.py
-
-# 統合システム（元のバージョン）
+# 音声対話システム（推奨）
 python main.py
 
 # 個別テスト
 python tests/test_audio.py    # 音声認識テスト
 python tests/test_ai.py        # AI対話テスト
 python tests/test_tts.py       # 音声合成テスト
-python tests/test_gif.py       # GIF表示テスト
 ```
 
 ### 機能
@@ -90,19 +82,17 @@ python tests/test_gif.py       # GIF表示テスト
 - **AI対話**: OpenAI ChatGPT APIで自然な対話
 - **音声合成**: OpenAI TTS APIで音声を生成
 - **音声再生**: スピーカーから音声を再生
-- **GIF表示**: 音声対話中にGIFアニメーションを表示
 - **音声合図**: ビープ音で状態を通知
 - **日本語対応**: 日本語音声の認識に最適化
 
 ### 操作方法
 1. スクリプトを実行
-2. GIFアニメーションが継続的に表示される
-3. 「音声を待機中...」と表示されたら話しかける
-4. 音声が検出されると自動で文字起こし実行
-5. AI応答が生成される
-6. AI応答が音声で再生される
-7. 結果が表示される
-8. Ctrl+C で終了
+2. 「音声を待機中...」と表示されたら話しかける
+3. 音声が検出されると自動で文字起こし実行
+4. AI応答が生成される
+5. AI応答が音声で再生される
+6. 結果が表示される
+7. Ctrl+C で終了
 
 ## 🔧 設定オプション
 
