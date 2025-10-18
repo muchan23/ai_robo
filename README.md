@@ -68,7 +68,13 @@ ai_robo/
 
 ### 基本的な実行
 ```bash
-# 統合システム（推奨）
+# 音声対話のみ（推奨・安定版）
+python main_simple.py
+
+# 音声対話 + GIF表示（実験版）
+python main_with_gif.py
+
+# 統合システム（元のバージョン）
 python main.py
 
 # 個別テスト

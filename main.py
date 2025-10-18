@@ -38,43 +38,58 @@ def main():
         print("🎬 GIF表示を開始します")
         gif_player.start_continuous_display()
         
-        while True:
-            try:
-                # 音声を待機（音声が検出されるまで待機）
-                audio_data = voice_recognition.wait_for_speech()
-                
-                if audio_data:
-                    # 文字起こし実行
-                    print("📝 文字起こし中...")
-                    transcribed_text = voice_recognition.transcribe_audio(audio_data)
+        # ウィンドウのイベントループを非同期で実行
+        def run_voice_loop():
+            while True:
+                try:
+                    # 音声を待機（音声が検出されるまで待機）
+                    audio_data = voice_recognition.wait_for_speech()
                     
-                    if transcribed_text:
-                        print(f"📝 認識結果: {transcribed_text}")
+                    if audio_data:
+                        # 文字起こし実行
+                        print("📝 文字起こし中...")
+                        transcribed_text = voice_recognition.transcribe_audio(audio_data)
                         
-                        # AI対話実行
-                        print("🤖 AI応答を生成中...")
-                        ai_response = ai_chat.chat(transcribed_text)
-                        print(f"🤖 AI応答: {ai_response}")
-                        
-                        # 音声合成・再生
-                        print("🔊 音声合成中...")
-                        tts.speak_text(ai_response)
-                        print("✅ 音声再生完了")
-                        
+                        if transcribed_text:
+                            print(f"📝 認識結果: {transcribed_text}")
+                            
+                            # AI対話実行
+                            print("🤖 AI応答を生成中...")
+                            ai_response = ai_chat.chat(transcribed_text)
+                            print(f"🤖 AI応答: {ai_response}")
+                            
+                            # 音声合成・再生
+                            print("🔊 音声合成中...")
+                            tts.speak_text(ai_response)
+                            print("✅ 音声再生完了")
+                            
+                        else:
+                            print("❌ 音声が認識されませんでした")
+                            voice_recognition.play_sound("error")
                     else:
-                        print("❌ 音声が認識されませんでした")
+                        print("❌ 音声が検出されませんでした")
                         voice_recognition.play_sound("error")
-                else:
-                    print("❌ 音声が検出されませんでした")
+                        
+                except KeyboardInterrupt:
+                    print("\n🛑 終了します...")
+                    break
+                except Exception as e:
+                    print(f"❌ エラー: {e}")
                     voice_recognition.play_sound("error")
-                    
-            except KeyboardInterrupt:
-                print("\n🛑 終了します...")
-                break
-            except Exception as e:
-                print(f"❌ エラー: {e}")
-                voice_recognition.play_sound("error")
-                continue
+                    continue
+        
+        # 音声ループを別スレッドで実行
+        import threading
+        voice_thread = threading.Thread(target=run_voice_loop)
+        voice_thread.daemon = True
+        voice_thread.start()
+        
+        # メインスレッドでウィンドウループを実行
+        if gif_player.root:
+            gif_player.root.mainloop()
+        
+        # 音声スレッドの終了を待機
+        voice_thread.join()
         
     except Exception as e:
         print(f"❌ 初期化エラー: {e}")
