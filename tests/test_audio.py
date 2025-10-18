@@ -11,7 +11,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.audio.voice_recognition import VoiceRecognition
+from src.audio.voice_recognition_simple import VoiceRecognition
 
 def test_voice_recognition():
     """音声認識テスト"""
