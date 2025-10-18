@@ -189,6 +189,66 @@ class GIFPlayer:
             gif_path = random.choice(self.gif_files)
             self.play_gif(gif_path, duration)
     
+    def start_continuous_display(self, duration=100):
+        """
+        継続的にGIFを表示（音声対話中ずっと表示）
+        
+        Args:
+            duration: フレーム間隔（ミリ秒）
+        """
+        if not self.gif_files:
+            self.logger.warning("GIFファイルが見つかりません")
+            return
+        
+        self.logger.info("継続的GIF表示を開始します")
+        
+        try:
+            # ウィンドウを作成（まだ作成されていない場合）
+            if self.root is None:
+                self._create_window()
+            
+            # ランダムなGIFを選択
+            import random
+            gif_path = random.choice(self.gif_files)
+            
+            # GIFを読み込み
+            frames = self._load_gif(gif_path)
+            if not frames:
+                return
+            
+            # アニメーションを開始
+            self.is_playing = True
+            self.animation_thread = threading.Thread(
+                target=self._animate_gif, 
+                args=(frames, duration)
+            )
+            self.animation_thread.daemon = True
+            self.animation_thread.start()
+            
+            # ウィンドウを表示
+            self.root.deiconify()
+            self.root.lift()
+            self.root.focus_force()
+            
+            # ウィンドウのイベントループを非同期で開始
+            self._start_window_loop()
+            
+        except Exception as e:
+            self.logger.error(f"継続的GIF表示エラー: {e}")
+    
+    def _start_window_loop(self):
+        """ウィンドウのイベントループを非同期で開始"""
+        def run_window_loop():
+            try:
+                self.root.mainloop()
+            except Exception as e:
+                self.logger.error(f"ウィンドウループエラー: {e}")
+        
+        # 別スレッドでウィンドウループを実行
+        self.window_thread = threading.Thread(target=run_window_loop)
+        self.window_thread.daemon = True
+        self.window_thread.start()
+    
     def cleanup(self):
         """リソースのクリーンアップ"""
         self.stop()

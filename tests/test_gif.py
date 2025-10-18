@@ -31,12 +31,13 @@ def test_gif_player():
         print("🎯 GIF表示を開始します")
         print("💡 ESCキーで終了、F11キーでフルスクリーン切り替え")
         
-        # ランダムなGIFを表示
-        gif_player.show_random_gif()
+        # 継続的にGIFを表示
+        gif_player.start_continuous_display()
         
-        # ウィンドウのイベントループを開始
-        if gif_player.root:
-            gif_player.root.mainloop()
+        # 少し待機してから終了
+        import time
+        time.sleep(5)
+        print("✅ GIF表示テスト完了")
         
     except Exception as e:
         print(f"❌ テストエラー: {e}")

@@ -34,6 +34,10 @@ def main():
         print("💡 話しかけてください...")
         print("⏹️  Ctrl+C で終了")
         
+        # GIF表示を開始（音声対話開始時）
+        print("🎬 GIF表示を開始します")
+        gif_player.start_continuous_display()
+        
         while True:
             try:
                 # 音声を待機（音声が検出されるまで待機）
@@ -47,10 +51,6 @@ def main():
                     if transcribed_text:
                         print(f"📝 認識結果: {transcribed_text}")
                         
-                        # GIF表示開始
-                        print("🎬 GIF表示を開始します")
-                        gif_player.show_random_gif()
-                        
                         # AI対話実行
                         print("🤖 AI応答を生成中...")
                         ai_response = ai_chat.chat(transcribed_text)
@@ -60,11 +60,6 @@ def main():
                         print("🔊 音声合成中...")
                         tts.speak_text(ai_response)
                         print("✅ 音声再生完了")
-                        
-                        # GIF表示終了（少し待機後）
-                        import time
-                        time.sleep(2)
-                        gif_player.stop()
                         
                     else:
                         print("❌ 音声が認識されませんでした")
