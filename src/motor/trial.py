@@ -1,11 +1,26 @@
 from time import sleep
 import pigpio
 import time
+import sys
 
 #GPIO???
-pi = pigpio.pi()
-pi.set_mode(17, pigpio.OUTPUT)
-pi.set_mode(22, pigpio.OUTPUT)
+try:
+    pi = pigpio.pi()
+    if not pi.connected:
+        print("pigpioデーモンに接続できません。")
+        print("以下のコマンドでpigpioデーモンを起動してください：")
+        print("sudo pigpiod")
+        sys.exit(1)
+    
+    pi.set_mode(17, pigpio.OUTPUT)
+    pi.set_mode(22, pigpio.OUTPUT)
+    print("pigpioデーモンに正常に接続しました。")
+    
+except Exception as e:
+    print(f"pigpioの初期化でエラーが発生しました: {e}")
+    print("pigpioデーモンが起動しているか確認してください：")
+    print("sudo pigpiod")
+    sys.exit(1)
 
 #PWM?????
 pwm_pin1 = 18 #PWM??????
