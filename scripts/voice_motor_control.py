@@ -5,8 +5,13 @@
 """
 
 import sys
+import os
 import time
 import logging
+
+# プロジェクトルートをPythonパスに追加
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.audio.voice_recognition import VoiceRecognition
 from src.ai.motor_ai_chat import MotorAIChat
 from src.motor.motor_controller import MotorController

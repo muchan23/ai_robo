@@ -81,15 +81,18 @@ ai_robo/
 ### 音声制御ロボット（メイン）
 ```bash
 # 音声でロボットを制御
+cd /home/murakami/ai_robo
 python scripts/voice_motor_control.py
 ```
 
 ### 基本音声対話システム
 ```bash
 # 音声対話システム
+cd /home/murakami/ai_robo
 python scripts/main.py
 
 # シンプル音声対話
+cd /home/murakami/ai_robo
 python scripts/main_simple.py
 ```
 
