@@ -1,17 +1,26 @@
 from time import sleep
-import RPi.GPIO as GPIO
+import pigpio
 import time
 import sys
 
 #GPIO???
 try:
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(17, GPIO.OUT)
-    GPIO.setup(22, GPIO.OUT)
-    print("GPIOが正常に初期化されました。")
+    # リモート接続でpigpiodデーモンに接続
+    pi = pigpio.pi('localhost', 8888)
+    if not pi.connected:
+        print("pigpioデーモンに接続できません。")
+        print("以下のコマンドでpigpioデーモンを起動してください：")
+        print("sudo pigpiod")
+        sys.exit(1)
+    
+    pi.set_mode(17, pigpio.OUTPUT)
+    pi.set_mode(22, pigpio.OUTPUT)
+    print("pigpioデーモンに正常に接続しました。")
     
 except Exception as e:
-    print(f"GPIOの初期化でエラーが発生しました: {e}")
+    print(f"pigpioの初期化でエラーが発生しました: {e}")
+    print("pigpioデーモンが起動しているか確認してください：")
+    print("sudo pigpiod")
     sys.exit(1)
 
 #PWM?????
@@ -21,18 +30,16 @@ freq = 100 #PWM????Hz???
 up_flag = True
 
 #IN1?IN2?????
-GPIO.output(17, GPIO.LOW)
-GPIO.output(22, GPIO.HIGH)
-
-#PWM???
-pwm = GPIO.PWM(pwm_pin1, freq)
-pwm.start(duty)
+pi.write(17, 0)
+pi.write(22, 1)
 
 #???????
 try:
     while True:
+        #???????????
+        cnv_dutycycle = int((duty * 1000000 / 100))
         #PWM???
-        pwm.ChangeDutyCycle(duty)
+        pi.hardware_PWM(pwm_pin1, freq, cnv_dutycycle)
         #duty???
         if up_flag == True:
             if duty == 100:
@@ -49,5 +56,4 @@ try:
 
 except KeyboardInterrupt:
     print("\nプログラムを終了します...")
-    pwm.stop()
-    GPIO.cleanup()
+    pi.stop()
