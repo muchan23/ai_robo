@@ -8,6 +8,7 @@ try:
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(17, GPIO.OUT)
     GPIO.setup(22, GPIO.OUT)
+    GPIO.setup(18, GPIO.OUT)  # PWMピンを出力として設定
     print("GPIOが正常に初期化されました。")
     
 except Exception as e:
