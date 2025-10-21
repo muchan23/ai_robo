@@ -1,6 +1,6 @@
-# ラズパイ音声対話システム
+# ラズパイ音声制御ロボットシステム
 
-OpenAI APIを使用した完全な音声対話システムです。
+OpenAI APIを使用した音声認識・AI解釈・モーター制御の統合システムです。
 
 ## 🚀 セットアップ
 
@@ -50,49 +50,86 @@ aplay -l
 
 ```
 ai_robo/
-├── main.py                    # メインスクリプト
-├── requirements.txt           # 依存関係
-├── env.example               # 環境設定例
-├── assets/                   # アセットファイル（GIF等）
-│   └── gifs/                 # GIFアニメーション
-│       └── *.gif
+├── scripts/                  # 実行スクリプト
+│   ├── main.py              # 基本音声対話システム
+│   ├── main_simple.py       # シンプル音声対話
+│   └── voice_motor_control.py # 音声制御ロボット（メイン）
+├── examples/                 # サンプル・テストファイル
+│   ├── debug_gif_animation.py
+│   ├── test_display_gif.py
+│   └── test_simple_gif.py
 ├── src/                      # ソースコード
-│   ├── audio/                # 音声処理
-│   ├── ai/                   # AI対話
+│   ├── audio/                # 音声認識
+│   │   ├── voice_recognition.py
+│   │   └── voice_recognition_simple.py
+│   ├── ai/                   # AI対話・解釈
+│   │   ├── ai_chat.py        # 基本AI対話
+│   │   └── motor_ai_chat.py  # モーター制御用AI
+│   ├── motor/                # モーター制御
+│   │   ├── motor_controller.py
+│   │   └── motor_speed_test.py
 │   └── tts/                  # 音声合成
-└── tests/                    # テスト
+├── assets/                   # アセットファイル
+├── docs/                     # ドキュメント
+├── tests/                    # テスト
+├── requirements.txt          # 依存関係
+└── env.example              # 環境設定例
 ```
 
 ## 🎤 使用方法
 
-### 基本的な実行
+### 音声制御ロボット（メイン）
 ```bash
-# 音声対話システム（推奨）
-python main.py
-
-# 個別テスト
-python tests/test_audio.py    # 音声認識テスト
-python tests/test_ai.py        # AI対話テスト
-python tests/test_tts.py       # 音声合成テスト
+# 音声でロボットを制御
+python scripts/voice_motor_control.py
 ```
 
-### 機能
-- **音声検出録音**: 音声が検出されるまで録音
-- **自動文字起こし**: OpenAI Whisper APIで音声をテキストに変換
-- **AI対話**: OpenAI ChatGPT APIで自然な対話
-- **音声合成**: OpenAI TTS APIで音声を生成
-- **音声再生**: スピーカーから音声を再生
-- **音声合図**: ビープ音で状態を通知
-- **日本語対応**: 日本語音声の認識に最適化
+### 基本音声対話システム
+```bash
+# 音声対話システム
+python scripts/main.py
+
+# シンプル音声対話
+python scripts/main_simple.py
+```
+
+### 個別テスト
+```bash
+# 音声認識テスト
+python tests/test_audio.py
+
+# AI対話テスト
+python tests/test_ai.py
+
+# 音声合成テスト
+python tests/test_tts.py
+
+# モーター制御テスト
+python src/motor/motor_controller.py
+
+# AI解釈テスト
+python src/ai/motor_ai_chat.py
+```
+
+### 音声制御ロボットの機能
+- **音声認識**: OpenAI Whisper APIで音声をテキストに変換
+- **AI解釈**: 音声指示をモーター制御コマンドに変換
+- **モーター制御**: 前進・後退・回転・停止の制御
+- **自然な指示**: 「前に進んで」「右に回って」「止まって」など
+
+### 音声指示の例
+- **「前に進んで」** → 前進（速度50%、2秒）
+- **「速く右に回って」** → 右回転（速度80%、1.5秒）
+- **「止まって」** → 停止
+- **「後ろに下がって」** → 後退（速度30%、1.5秒）
 
 ### 操作方法
 1. スクリプトを実行
 2. 「音声を待機中...」と表示されたら話しかける
 3. 音声が検出されると自動で文字起こし実行
-4. AI応答が生成される
-5. AI応答が音声で再生される
-6. 結果が表示される
-7. Ctrl+C で終了
+4. AI解釈でモーター制御コマンドを生成
+5. モーターが動作する
+6. Ctrl+C で終了
 
 ## 🔧 設定オプション
 
@@ -136,8 +173,27 @@ aplay test.wav
 - **音声デバイスエラー**: マイクデバイスを確認
 - **APIエラー**: OpenAI APIキーを確認
 
+## 🚗 モーター制御の設定
+
+### GPIO設定
+- **IN1**: GPIO 17
+- **IN2**: GPIO 22  
+- **PWM**: GPIO 18
+
+### 制御可能な動作
+- **前進**: `move_forward`
+- **後退**: `move_backward`
+- **左回転**: `turn_left`
+- **右回転**: `turn_right`
+- **停止**: `stop`
+
+### パラメータ
+- **速度**: 0-100%
+- **時間**: 0.1-10秒
+
 ## 📝 次のステップ
 
-1. **AI対話機能の追加** - ChatGPT API連携
-2. **音声合成機能の追加** - TTS API連携
-3. **統合システムの実装** - 完全な音声対話システム
+1. **モーター制御の最適化** - 回転制御の改善
+2. **音声指示の拡張** - より複雑な指示への対応
+3. **センサー連携** - 距離センサーやカメラとの統合
+4. **ロボット制御の高度化** - 自律走行機能の追加
