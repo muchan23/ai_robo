@@ -195,9 +195,9 @@ aplay test.wav
 | IN1 | GPIO 17 | 11 | モーターA制御1 |
 | IN2 | GPIO 22 | 15 | モーターA制御2 |
 | ENA | GPIO 18 | 12 | モーターA速度制御 (PWM) |
-| IN3 | GPIO 23 | 16 | モーターB制御1 |
-| IN4 | GPIO 24 | 18 | モーターB制御2 |
-| ENB | GPIO 25 | 22 | モーターB速度制御 (PWM) |
+| IN3 | GPIO 19 | 35 | モーターB制御1 |
+| IN4 | GPIO 26 | 37 | モーターB制御2 |
+| ENB | GPIO 13 | 33 | モーターB速度制御 (PWM) |
 | VCC | 5V | 2 | 電源 (5V) |
 | GND | GND | 6 | グランド |
 

@@ -22,10 +22,10 @@ class MotorController:
         self.motor_a_pin2 = 22  # IN2
         self.motor_a_pwm = 18   # ENA (PWM)
         
-        # モーターB (右モーター)
-        self.motor_b_pin1 = 23  # IN3
-        self.motor_b_pin2 = 24  # IN4
-        self.motor_b_pwm = 25   # ENB (PWM)
+        # モーターB (右モーター) - クロストーク回避のためピンを変更
+        self.motor_b_pin1 = 19  # IN3 (GPIO 23 → 19に変更)
+        self.motor_b_pin2 = 26  # IN4 (GPIO 24 → 26に変更)
+        self.motor_b_pwm = 13   # ENB (GPIO 25 → 13に変更)
         
         # モーター制御用変数
         self.pwm_a = None
@@ -62,9 +62,9 @@ class MotorController:
             GPIO.setup(self.motor_b_pin2, GPIO.OUT)
             GPIO.setup(self.motor_b_pwm, GPIO.OUT)
             
-            # PWM初期化
-            self.pwm_a = GPIO.PWM(self.motor_a_pwm, 1000)  # 1kHz
-            self.pwm_b = GPIO.PWM(self.motor_b_pwm, 1000)  # 1kHz
+            # PWM初期化 - モーターに最適化された周波数
+            self.pwm_a = GPIO.PWM(self.motor_a_pwm, 500)   # 500Hz (モーターA用)
+            self.pwm_b = GPIO.PWM(self.motor_b_pwm, 500)   # 500Hz (モーターB用)
             self.pwm_a.start(0)  # 0%で開始
             self.pwm_b.start(0)  # 0%で開始
             
