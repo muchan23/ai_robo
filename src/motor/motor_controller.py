@@ -32,6 +32,10 @@ class MotorController:
         self.pwm_b = None
         self.is_initialized = False
         
+        # 速度調整係数（モーターの個体差を補正）
+        self.speed_correction_a = 1.0  # モーターAの補正係数
+        self.speed_correction_b = 1.0  # モーターBの補正係数
+        
         self._initialize_gpio()
         self.logger.info("モーター制御システムを初期化しました")
     
@@ -106,21 +110,57 @@ class MotorController:
         except Exception as e:
             self.logger.error(f"コマンド実行エラー: {e}")
     
+    def set_speed_correction(self, motor_a_correction: float = 1.0, motor_b_correction: float = 1.0):
+        """
+        モーター速度調整係数を設定
+        
+        Args:
+            motor_a_correction: モーターAの補正係数 (0.5-2.0)
+            motor_b_correction: モーターBの補正係数 (0.5-2.0)
+        """
+        self.speed_correction_a = max(0.1, min(2.0, motor_a_correction))
+        self.speed_correction_b = max(0.1, min(2.0, motor_b_correction))
+        self.logger.info(f"速度調整係数設定: モーターA={self.speed_correction_a:.2f}, モーターB={self.speed_correction_b:.2f}")
+    
+    def _apply_speed_correction(self, speed: int, motor: str) -> int:
+        """
+        速度に補正係数を適用
+        
+        Args:
+            speed: 元の速度 (0-100)
+            motor: モーター指定 ("left", "right", "both")
+            
+        Returns:
+            補正後の速度 (0-100)
+        """
+        if motor == "left" or motor == "both":
+            corrected_speed = int(speed * self.speed_correction_a)
+        elif motor == "right":
+            corrected_speed = int(speed * self.speed_correction_b)
+        else:
+            corrected_speed = speed
+        
+        return max(0, min(100, corrected_speed))
+    
     def _move_forward(self, speed: int, duration: float, motor: str = "both"):
         """前進"""
         self.logger.info(f"前進: 速度{speed}%, {duration}秒, モーター: {motor}")
         
         if motor in ["left", "both"]:
             # 左モーター (モーターA) 前進
+            corrected_speed_a = self._apply_speed_correction(speed, "left")
             GPIO.output(self.motor_a_pin1, GPIO.LOW)
             GPIO.output(self.motor_a_pin2, GPIO.HIGH)
-            self.pwm_a.ChangeDutyCycle(speed)
+            self.pwm_a.ChangeDutyCycle(corrected_speed_a)
+            self.logger.debug(f"モーターA: 元速度{speed}% → 補正後{corrected_speed_a}%")
         
         if motor in ["right", "both"]:
             # 右モーター (モーターB) 前進
+            corrected_speed_b = self._apply_speed_correction(speed, "right")
             GPIO.output(self.motor_b_pin1, GPIO.LOW)
             GPIO.output(self.motor_b_pin2, GPIO.HIGH)
-            self.pwm_b.ChangeDutyCycle(speed)
+            self.pwm_b.ChangeDutyCycle(corrected_speed_b)
+            self.logger.debug(f"モーターB: 元速度{speed}% → 補正後{corrected_speed_b}%")
         
         time.sleep(duration)
         self._stop()
@@ -131,15 +171,19 @@ class MotorController:
         
         if motor in ["left", "both"]:
             # 左モーター (モーターA) 後退
+            corrected_speed_a = self._apply_speed_correction(speed, "left")
             GPIO.output(self.motor_a_pin1, GPIO.HIGH)
             GPIO.output(self.motor_a_pin2, GPIO.LOW)
-            self.pwm_a.ChangeDutyCycle(speed)
+            self.pwm_a.ChangeDutyCycle(corrected_speed_a)
+            self.logger.debug(f"モーターA: 元速度{speed}% → 補正後{corrected_speed_a}%")
         
         if motor in ["right", "both"]:
             # 右モーター (モーターB) 後退
+            corrected_speed_b = self._apply_speed_correction(speed, "right")
             GPIO.output(self.motor_b_pin1, GPIO.HIGH)
             GPIO.output(self.motor_b_pin2, GPIO.LOW)
-            self.pwm_b.ChangeDutyCycle(speed)
+            self.pwm_b.ChangeDutyCycle(corrected_speed_b)
+            self.logger.debug(f"モーターB: 元速度{speed}% → 補正後{corrected_speed_b}%")
         
         time.sleep(duration)
         self._stop()
@@ -149,14 +193,18 @@ class MotorController:
         self.logger.info(f"左回転: 速度{speed}%, {duration}秒")
         
         # 左モーター (モーターA) 後退
+        corrected_speed_a = self._apply_speed_correction(speed, "left")
         GPIO.output(self.motor_a_pin1, GPIO.HIGH)
         GPIO.output(self.motor_a_pin2, GPIO.LOW)
-        self.pwm_a.ChangeDutyCycle(speed)
+        self.pwm_a.ChangeDutyCycle(corrected_speed_a)
+        self.logger.debug(f"左回転 - モーターA: 元速度{speed}% → 補正後{corrected_speed_a}%")
         
         # 右モーター (モーターB) 前進
+        corrected_speed_b = self._apply_speed_correction(speed, "right")
         GPIO.output(self.motor_b_pin1, GPIO.LOW)
         GPIO.output(self.motor_b_pin2, GPIO.HIGH)
-        self.pwm_b.ChangeDutyCycle(speed)
+        self.pwm_b.ChangeDutyCycle(corrected_speed_b)
+        self.logger.debug(f"左回転 - モーターB: 元速度{speed}% → 補正後{corrected_speed_b}%")
         
         time.sleep(duration)
         self._stop()
@@ -166,14 +214,18 @@ class MotorController:
         self.logger.info(f"右回転: 速度{speed}%, {duration}秒")
         
         # 左モーター (モーターA) 前進
+        corrected_speed_a = self._apply_speed_correction(speed, "left")
         GPIO.output(self.motor_a_pin1, GPIO.LOW)
         GPIO.output(self.motor_a_pin2, GPIO.HIGH)
-        self.pwm_a.ChangeDutyCycle(speed)
+        self.pwm_a.ChangeDutyCycle(corrected_speed_a)
+        self.logger.debug(f"右回転 - モーターA: 元速度{speed}% → 補正後{corrected_speed_a}%")
         
         # 右モーター (モーターB) 後退
+        corrected_speed_b = self._apply_speed_correction(speed, "right")
         GPIO.output(self.motor_b_pin1, GPIO.HIGH)
         GPIO.output(self.motor_b_pin2, GPIO.LOW)
-        self.pwm_b.ChangeDutyCycle(speed)
+        self.pwm_b.ChangeDutyCycle(corrected_speed_b)
+        self.logger.debug(f"右回転 - モーターB: 元速度{speed}% → 補正後{corrected_speed_b}%")
         
         time.sleep(duration)
         self._stop()
