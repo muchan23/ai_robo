@@ -110,6 +110,65 @@ class MotorController:
         except Exception as e:
             self.logger.error(f"コマンド実行エラー: {e}")
     
+    def test_rotation_direction(self, speed: int = 30, duration: float = 3.0):
+        """
+        タイヤの回転方向テスト
+        左右のモーターが同じ方向に回転するかを確認
+        
+        Args:
+            speed: テスト速度 (0-100)
+            duration: テスト時間 (秒)
+        """
+        self.logger.info("タイヤ回転方向テスト開始")
+        print("🔄 タイヤ回転方向テスト")
+        print("=" * 50)
+        print("⚠️  注意: 左右のタイヤが同じ方向に回転することを確認してください")
+        print()
+        
+        # テスト1: 左モーター前進
+        print("🔄 テスト1: 左モーター (モーターA) 前進")
+        print("   → 左タイヤが時計回りに回転するはずです")
+        self._move_forward(speed, duration, "left")
+        time.sleep(1)
+        
+        # テスト2: 右モーター前進
+        print("🔄 テスト2: 右モーター (モーターB) 前進")
+        print("   → 右タイヤが時計回りに回転するはずです")
+        self._move_forward(speed, duration, "right")
+        time.sleep(1)
+        
+        # テスト3: 両モーター前進
+        print("🔄 テスト3: 両モーター前進")
+        print("   → 両方のタイヤが同じ方向（時計回り）に回転するはずです")
+        self._move_forward(speed, duration, "both")
+        time.sleep(1)
+        
+        # テスト4: 左モーター後退
+        print("🔄 テスト4: 左モーター (モーターA) 後退")
+        print("   → 左タイヤが反時計回りに回転するはずです")
+        self._move_backward(speed, duration, "left")
+        time.sleep(1)
+        
+        # テスト5: 右モーター後退
+        print("🔄 テスト5: 右モーター (モーターB) 後退")
+        print("   → 右タイヤが反時計回りに回転するはずです")
+        self._move_backward(speed, duration, "right")
+        time.sleep(1)
+        
+        # テスト6: 両モーター後退
+        print("🔄 テスト6: 両モーター後退")
+        print("   → 両方のタイヤが同じ方向（反時計回り）に回転するはずです")
+        self._move_backward(speed, duration, "both")
+        
+        print("\n✅ 回転方向テスト完了")
+        print("📋 確認事項:")
+        print("   - テスト1と2で同じ方向に回転したか？")
+        print("   - テスト3で両方のタイヤが同じ方向に回転したか？")
+        print("   - テスト4と5で同じ方向に回転したか？")
+        print("   - テスト6で両方のタイヤが同じ方向に回転したか？")
+        print()
+        print("❌ もし逆方向に回転している場合は、配線を確認してください")
+    
     def set_speed_correction(self, motor_a_correction: float = 1.0, motor_b_correction: float = 1.0):
         """
         モーター速度調整係数を設定
@@ -265,6 +324,12 @@ def main():
         
         print("🎯 モーター制御テストを開始します")
         print("💡 テストコマンドを実行します")
+        
+        # 回転方向テストを最初に実行
+        print("🔄 タイヤ回転方向テストを実行します")
+        motor_controller.test_rotation_direction(speed=30, duration=2.0)
+        
+        input("\nEnterキーを押して基本テストを開始...")
         
         # テストコマンド - 4チャンネル制御
         test_commands = [
