@@ -199,7 +199,10 @@ class MotorController:
         else:
             corrected_speed = speed
         
-        return max(0, min(100, corrected_speed))
+        # 最低動作速度を30%に設定（モーターの特性に応じて調整）
+        corrected_speed = max(30, min(100, corrected_speed))
+        
+        return corrected_speed
     
     def _move_forward(self, speed: int, duration: float, motor: str = "both"):
         """前進"""
@@ -327,7 +330,7 @@ def main():
         
         # 回転方向テストを最初に実行
         print("🔄 タイヤ回転方向テストを実行します")
-        motor_controller.test_rotation_direction(speed=30, duration=2.0)
+        motor_controller.test_rotation_direction(speed=50, duration=2.0)
         
         input("\nEnterキーを押して基本テストを開始...")
         

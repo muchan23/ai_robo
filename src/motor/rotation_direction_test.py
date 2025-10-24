@@ -39,13 +39,13 @@ def main():
         motor_controller = MotorController()
         
         # 回転方向テストを実行
-        motor_controller.test_rotation_direction(speed=30, duration=3.0)
+        motor_controller.test_rotation_direction(speed=50, duration=3.0)
         
         print("\n🎯 追加テスト: 速度を変えてテスト")
         print("=" * 50)
         
         # 異なる速度でのテスト
-        test_speeds = [20, 50, 80]
+        test_speeds = [40, 60, 80]
         for speed in test_speeds:
             print(f"\n🚗 速度{speed}%でのテスト")
             motor_controller.execute_command({

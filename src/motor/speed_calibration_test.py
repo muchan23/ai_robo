@@ -30,7 +30,7 @@ class SpeedCalibrationTest:
         print("🔧 個別モーター速度テスト")
         print("=" * 50)
         
-        test_speeds = [30, 50, 70, 90]
+        test_speeds = [40, 60, 80, 90]
         duration = 3.0
         
         for speed in test_speeds:
@@ -63,9 +63,9 @@ class SpeedCalibrationTest:
         print("両モーターを同時に動かして、直進性を確認します")
         
         test_commands = [
-            {"speed": 50, "duration": 5.0, "message": "中速直進テスト"},
-            {"speed": 70, "duration": 5.0, "message": "高速直進テスト"},
-            {"speed": 30, "duration": 5.0, "message": "低速直進テスト"},
+            {"speed": 60, "duration": 5.0, "message": "中速直進テスト"},
+            {"speed": 80, "duration": 5.0, "message": "高速直進テスト"},
+            {"speed": 40, "duration": 5.0, "message": "低速直進テスト"},
         ]
         
         for command in test_commands:

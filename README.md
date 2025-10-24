@@ -214,8 +214,38 @@ aplay test.wav
 - `"right"`: 右モーターのみ（モーターB）
 
 ### パラメータ
-- **速度**: 0-100%
+- **速度**: 30-100% (最低動作速度30%)
 - **時間**: 0.1-10秒
+
+### モーター制御ファイル構成
+```
+src/motor/
+├── motor_controller.py          # メイン制御クラス
+├── rotation_direction_test.py   # 回転方向テスト
+└── speed_calibration_test.py    # 速度調整テスト
+```
+
+### テスト実行方法
+```bash
+# 回転方向テスト（タイヤの回転方向確認）
+python src/motor/rotation_direction_test.py
+
+# 速度調整テスト（左右の速度差調整）
+python src/motor/speed_calibration_test.py
+
+# メイン制御テスト（全機能テスト）
+python src/motor/motor_controller.py
+```
+
+### 速度調整機能
+- **自動補正**: 左右のモーターの個体差を自動補正
+- **手動調整**: 補正係数を手動で設定可能
+- **最低速度**: 30%未満は自動的に30%に調整
+
+### トラブルシューティング
+- **モーターが動かない**: 速度を30%以上に設定
+- **左右の速度が違う**: `speed_calibration_test.py`を実行
+- **回転方向が逆**: 配線を確認し、必要に応じて交換
 
 ## 📝 次のステップ
 
