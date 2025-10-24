@@ -16,13 +16,20 @@ class MotorController:
         """初期化"""
         self.logger = self._setup_logging()
         
-        # GPIO設定
-        self.motor_pin1 = 17  # IN1
-        self.motor_pin2 = 22  # IN2
-        self.pwm_pin = 18     # PWM
+        # GPIO設定 - 4チャンネル制御
+        # モーターA (左モーター)
+        self.motor_a_pin1 = 17  # IN1
+        self.motor_a_pin2 = 22  # IN2
+        self.motor_a_pwm = 18   # ENA (PWM)
+        
+        # モーターB (右モーター)
+        self.motor_b_pin1 = 23  # IN3
+        self.motor_b_pin2 = 24  # IN4
+        self.motor_b_pwm = 25   # ENB (PWM)
         
         # モーター制御用変数
-        self.pwm = None
+        self.pwm_a = None
+        self.pwm_b = None
         self.is_initialized = False
         
         self._initialize_gpio()
@@ -40,16 +47,25 @@ class MotorController:
         """GPIO初期化"""
         try:
             GPIO.setmode(GPIO.BCM)
-            GPIO.setup(self.motor_pin1, GPIO.OUT)
-            GPIO.setup(self.motor_pin2, GPIO.OUT)
-            GPIO.setup(self.pwm_pin, GPIO.OUT)
+            
+            # モーターA (左モーター) のGPIO設定
+            GPIO.setup(self.motor_a_pin1, GPIO.OUT)
+            GPIO.setup(self.motor_a_pin2, GPIO.OUT)
+            GPIO.setup(self.motor_a_pwm, GPIO.OUT)
+            
+            # モーターB (右モーター) のGPIO設定
+            GPIO.setup(self.motor_b_pin1, GPIO.OUT)
+            GPIO.setup(self.motor_b_pin2, GPIO.OUT)
+            GPIO.setup(self.motor_b_pwm, GPIO.OUT)
             
             # PWM初期化
-            self.pwm = GPIO.PWM(self.pwm_pin, 100)  # 100Hz
-            self.pwm.start(0)  # 0%で開始
+            self.pwm_a = GPIO.PWM(self.motor_a_pwm, 1000)  # 1kHz
+            self.pwm_b = GPIO.PWM(self.motor_b_pwm, 1000)  # 1kHz
+            self.pwm_a.start(0)  # 0%で開始
+            self.pwm_b.start(0)  # 0%で開始
             
             self.is_initialized = True
-            self.logger.info("GPIO初期化完了")
+            self.logger.info("4チャンネルGPIO初期化完了")
             
         except Exception as e:
             self.logger.error(f"GPIO初期化エラー: {e}")
@@ -69,14 +85,15 @@ class MotorController:
         action = command.get("action", "stop")
         speed = command.get("speed", 0)
         duration = command.get("duration", 0)
+        motor = command.get("motor", "both")  # "left", "right", "both"
         
-        self.logger.info(f"コマンド実行: {action}, 速度: {speed}%, 時間: {duration}秒")
+        self.logger.info(f"コマンド実行: {action}, 速度: {speed}%, 時間: {duration}秒, モーター: {motor}")
         
         try:
             if action == "move_forward":
-                self._move_forward(speed, duration)
+                self._move_forward(speed, duration, motor)
             elif action == "move_backward":
-                self._move_backward(speed, duration)
+                self._move_backward(speed, duration, motor)
             elif action == "turn_left":
                 self._turn_left(speed, duration)
             elif action == "turn_right":
@@ -89,58 +106,98 @@ class MotorController:
         except Exception as e:
             self.logger.error(f"コマンド実行エラー: {e}")
     
-    def _move_forward(self, speed: int, duration: float):
+    def _move_forward(self, speed: int, duration: float, motor: str = "both"):
         """前進"""
-        self.logger.info(f"前進: 速度{speed}%, {duration}秒")
-        GPIO.output(self.motor_pin1, GPIO.LOW)
-        GPIO.output(self.motor_pin2, GPIO.HIGH)
-        self.pwm.ChangeDutyCycle(speed)
+        self.logger.info(f"前進: 速度{speed}%, {duration}秒, モーター: {motor}")
+        
+        if motor in ["left", "both"]:
+            # 左モーター (モーターA) 前進
+            GPIO.output(self.motor_a_pin1, GPIO.LOW)
+            GPIO.output(self.motor_a_pin2, GPIO.HIGH)
+            self.pwm_a.ChangeDutyCycle(speed)
+        
+        if motor in ["right", "both"]:
+            # 右モーター (モーターB) 前進
+            GPIO.output(self.motor_b_pin1, GPIO.LOW)
+            GPIO.output(self.motor_b_pin2, GPIO.HIGH)
+            self.pwm_b.ChangeDutyCycle(speed)
+        
         time.sleep(duration)
         self._stop()
     
-    def _move_backward(self, speed: int, duration: float):
+    def _move_backward(self, speed: int, duration: float, motor: str = "both"):
         """後退"""
-        self.logger.info(f"後退: 速度{speed}%, {duration}秒")
-        GPIO.output(self.motor_pin1, GPIO.HIGH)
-        GPIO.output(self.motor_pin2, GPIO.LOW)
-        self.pwm.ChangeDutyCycle(speed)
+        self.logger.info(f"後退: 速度{speed}%, {duration}秒, モーター: {motor}")
+        
+        if motor in ["left", "both"]:
+            # 左モーター (モーターA) 後退
+            GPIO.output(self.motor_a_pin1, GPIO.HIGH)
+            GPIO.output(self.motor_a_pin2, GPIO.LOW)
+            self.pwm_a.ChangeDutyCycle(speed)
+        
+        if motor in ["right", "both"]:
+            # 右モーター (モーターB) 後退
+            GPIO.output(self.motor_b_pin1, GPIO.HIGH)
+            GPIO.output(self.motor_b_pin2, GPIO.LOW)
+            self.pwm_b.ChangeDutyCycle(speed)
+        
         time.sleep(duration)
         self._stop()
     
     def _turn_left(self, speed: int, duration: float):
-        """左回転"""
+        """左回転（右モーター前進、左モーター後退）"""
         self.logger.info(f"左回転: 速度{speed}%, {duration}秒")
-        # 左回転の実装（モーターの接続に応じて調整）
-        GPIO.output(self.motor_pin1, GPIO.LOW)
-        GPIO.output(self.motor_pin2, GPIO.LOW)  # ブレーキ
-        self.pwm.ChangeDutyCycle(speed)
+        
+        # 左モーター (モーターA) 後退
+        GPIO.output(self.motor_a_pin1, GPIO.HIGH)
+        GPIO.output(self.motor_a_pin2, GPIO.LOW)
+        self.pwm_a.ChangeDutyCycle(speed)
+        
+        # 右モーター (モーターB) 前進
+        GPIO.output(self.motor_b_pin1, GPIO.LOW)
+        GPIO.output(self.motor_b_pin2, GPIO.HIGH)
+        self.pwm_b.ChangeDutyCycle(speed)
+        
         time.sleep(duration)
         self._stop()
     
     def _turn_right(self, speed: int, duration: float):
-        """右回転"""
+        """右回転（左モーター前進、右モーター後退）"""
         self.logger.info(f"右回転: 速度{speed}%, {duration}秒")
-        # 右回転の実装（モーターの接続に応じて調整）
-        GPIO.output(self.motor_pin1, GPIO.HIGH)
-        GPIO.output(self.motor_pin2, GPIO.HIGH)  # ブレーキ
-        self.pwm.ChangeDutyCycle(speed)
+        
+        # 左モーター (モーターA) 前進
+        GPIO.output(self.motor_a_pin1, GPIO.LOW)
+        GPIO.output(self.motor_a_pin2, GPIO.HIGH)
+        self.pwm_a.ChangeDutyCycle(speed)
+        
+        # 右モーター (モーターB) 後退
+        GPIO.output(self.motor_b_pin1, GPIO.HIGH)
+        GPIO.output(self.motor_b_pin2, GPIO.LOW)
+        self.pwm_b.ChangeDutyCycle(speed)
+        
         time.sleep(duration)
         self._stop()
     
     def _stop(self):
         """停止"""
         self.logger.info("停止")
-        GPIO.output(self.motor_pin1, GPIO.LOW)
-        GPIO.output(self.motor_pin2, GPIO.LOW)
-        self.pwm.ChangeDutyCycle(0)
+        # 両方のモーターを停止
+        GPIO.output(self.motor_a_pin1, GPIO.LOW)
+        GPIO.output(self.motor_a_pin2, GPIO.LOW)
+        GPIO.output(self.motor_b_pin1, GPIO.LOW)
+        GPIO.output(self.motor_b_pin2, GPIO.LOW)
+        self.pwm_a.ChangeDutyCycle(0)
+        self.pwm_b.ChangeDutyCycle(0)
     
     def cleanup(self):
         """リソースのクリーンアップ"""
         try:
-            if self.pwm:
-                self.pwm.stop()
+            if self.pwm_a:
+                self.pwm_a.stop()
+            if self.pwm_b:
+                self.pwm_b.stop()
             GPIO.cleanup()
-            self.logger.info("モーター制御システムをクリーンアップしました")
+            self.logger.info("4チャンネルモーター制御システムをクリーンアップしました")
         except Exception as e:
             self.logger.error(f"クリーンアップエラー: {e}")
 
@@ -157,11 +214,19 @@ def main():
         print("🎯 モーター制御テストを開始します")
         print("💡 テストコマンドを実行します")
         
-        # テストコマンド
+        # テストコマンド - 4チャンネル制御
         test_commands = [
-            {"action": "move_forward", "speed": 50, "duration": 2.0, "message": "前進テスト"},
+            {"action": "move_forward", "speed": 50, "duration": 2.0, "motor": "both", "message": "両モーター前進テスト"},
             {"action": "stop", "speed": 0, "duration": 1.0, "message": "停止"},
-            {"action": "move_backward", "speed": 30, "duration": 1.5, "message": "後退テスト"},
+            {"action": "move_forward", "speed": 40, "duration": 1.5, "motor": "left", "message": "左モーター前進テスト"},
+            {"action": "stop", "speed": 0, "duration": 1.0, "message": "停止"},
+            {"action": "move_forward", "speed": 40, "duration": 1.5, "motor": "right", "message": "右モーター前進テスト"},
+            {"action": "stop", "speed": 0, "duration": 1.0, "message": "停止"},
+            {"action": "turn_left", "speed": 60, "duration": 2.0, "message": "左回転テスト"},
+            {"action": "stop", "speed": 0, "duration": 1.0, "message": "停止"},
+            {"action": "turn_right", "speed": 60, "duration": 2.0, "message": "右回転テスト"},
+            {"action": "stop", "speed": 0, "duration": 1.0, "message": "停止"},
+            {"action": "move_backward", "speed": 30, "duration": 1.5, "motor": "both", "message": "両モーター後退テスト"},
             {"action": "stop", "speed": 0, "duration": 1.0, "message": "停止"},
         ]
         
