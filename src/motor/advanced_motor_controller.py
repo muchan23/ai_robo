@@ -4,11 +4,17 @@
 複数ステップの計画を実行し、柔軟なモーター制御を実現
 """
 
+import sys
+import os
 import time
 import logging
 import RPi.GPIO as GPIO
 from typing import Dict, List
-from motor_controller import MotorController
+
+# プロジェクトルートをPythonパスに追加
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.motor.motor_controller import MotorController
 
 class AdvancedMotorController:
     """高度なモーター制御クラス"""

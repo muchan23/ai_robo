@@ -4,12 +4,16 @@
 複数ステップの指示を解析し、LLMが柔軟にモーター制御計画を生成
 """
 
+import sys
 import os
 import json
 import logging
 from typing import Dict, List, Optional
 from openai import OpenAI
 from dotenv import load_dotenv
+
+# プロジェクトルートをPythonパスに追加
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # 環境変数を読み込み
 load_dotenv()
