@@ -35,26 +35,8 @@ def show_taskbar():
         return False
 
 def get_true_screen_size():
-    """真の画面サイズを取得（タスクバーを除く）"""
-    try:
-        # xrandrで画面情報を取得
-        result = subprocess.run(['xrandr'], capture_output=True, text=True)
-        lines = result.stdout.split('\n')
-        
-        for line in lines:
-            if ' connected' in line and 'primary' in line:
-                # 例: "HDMI-1 connected primary 1920x1080+0+0"
-                parts = line.split()
-                for part in parts:
-                    if 'x' in part and '+' in part:
-                        resolution = part.split('+')[0]
-                        width, height = resolution.split('x')
-                        return int(width), int(height)
-        
-        # デフォルト値
-        return 1920, 1080
-    except:
-        return 1920, 1080
+    """画面サイズを1024x768に固定"""
+    return 1024, 768
 
 def display_true_fullscreen_gif(duration_seconds=5):
     """真の全画面GIF表示（タスクバーを隠す）"""
@@ -84,9 +66,9 @@ def display_true_fullscreen_gif(duration_seconds=5):
         gif_path = os.path.join(gif_folder, gif_file)
         print(f"📁 ファイル: {gif_file}")
         
-        # 真の画面サイズを取得
+        # 画面サイズを1024x768に固定
         screen_width, screen_height = get_true_screen_size()
-        print(f"🖥️  真の画面サイズ: {screen_width}x{screen_height}")
+        print(f"🖥️  固定画面サイズ: {screen_width}x{screen_height}")
         
         # GIFファイルを開いて情報を確認
         with Image.open(gif_path) as img:
@@ -104,17 +86,17 @@ def display_true_fullscreen_gif(duration_seconds=5):
         root.attributes('-topmost', True)  # 最前面に表示
         root.configure(bg='black')
         
-        # ウィンドウの位置とサイズを明示的に設定
+        # ウィンドウの位置とサイズを1024x768に設定
         root.geometry(f"{screen_width}x{screen_height}+0+0")
         
         # GIFを再度開いてフレームを抽出
         gif_image = Image.open(gif_path)
         
-        # フレームを抽出（真の画面サイズに合わせてリサイズ）
+        # フレームを抽出（1024x768に合わせてリサイズ）
         frames = []
         for frame_num in range(gif_image.n_frames):
             gif_image.seek(frame_num)
-            # 真の画面サイズに合わせてリサイズ
+            # 1024x768に合わせてリサイズ
             frame_resized = gif_image.resize((screen_width, screen_height), Image.Resampling.LANCZOS)
             photo = ImageTk.PhotoImage(frame_resized)
             frames.append(photo)
@@ -213,10 +195,9 @@ def display_fullscreen_with_hide_panel(duration_seconds=5):
         root.attributes('-topmost', True)
         root.configure(bg='black')
         
-        # 画面サイズを取得
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
-        print(f"🖥️  画面サイズ: {screen_width}x{screen_height}")
+        # 画面サイズを1024x768に固定
+        screen_width, screen_height = 1024, 768
+        print(f"🖥️  固定画面サイズ: {screen_width}x{screen_height}")
         
         # GIFを開く
         gif_image = Image.open(gif_path)
