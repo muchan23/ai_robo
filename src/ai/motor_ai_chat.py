@@ -43,8 +43,8 @@ class MotorAIChat:
 
 速度設定の指針:
 - 前進・後退: 標準50%、高速80%、低速30%
-- 回転: 標準70%、高速85%、低速50%（回転にはより高い速度が必要）
-- 回転時間は通常1.2-1.5秒で短めに設定
+- 回転: 標準85%、高速95%、低速70%（回転にはより高い速度が必要）
+- 回転時間は通常0.8-1.0秒で短めに設定（素早い回転を実現）
 
 応答形式（JSON）:
 {
@@ -56,9 +56,10 @@ class MotorAIChat:
 
 例:
 - "前に進んで" → {"action": "move_forward", "speed": 50, "duration": 2.0, "message": "前進します"}
-- "右に回って" → {"action": "turn_right", "speed": 70, "duration": 1.5, "message": "右回転します"}
-- "左に回って" → {"action": "turn_left", "speed": 70, "duration": 1.5, "message": "左回転します"}
-- "速く右に回って" → {"action": "turn_right", "speed": 85, "duration": 1.2, "message": "高速右回転します"}
+- "右に回って" → {"action": "turn_right", "speed": 85, "duration": 1.0, "message": "右回転します"}
+- "左に回って" → {"action": "turn_left", "speed": 85, "duration": 1.0, "message": "左回転します"}
+- "速く右に回って" → {"action": "turn_right", "speed": 95, "duration": 0.8, "message": "高速右回転します"}
+- "速く左に回って" → {"action": "turn_left", "speed": 95, "duration": 0.8, "message": "高速左回転します"}
 - "止まって" → {"action": "stop", "speed": 0, "duration": 0, "message": "停止します"}
 
 必ずJSON形式で応答してください。
